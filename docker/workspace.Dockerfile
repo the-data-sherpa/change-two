@@ -12,6 +12,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/starter-api/package.json apps/starter-api/package.json
 COPY apps/starter-web/package.json apps/starter-web/package.json
 COPY packages/protocol/package.json packages/protocol/package.json
+COPY packages/evidence/package.json packages/evidence/package.json
 RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS source
@@ -22,6 +23,9 @@ COPY requirements ./requirements
 COPY schemas ./schemas
 
 FROM source AS development
+
+FROM source AS browser
+RUN pnpm --filter "@change-two/starter-web" exec playwright install --with-deps chromium
 
 FROM source AS checked
 RUN pnpm check

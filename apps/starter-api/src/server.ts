@@ -1,11 +1,16 @@
-import Fastify from "fastify";
+import { createDatabaseBackedApp } from "./app.js";
 
-const server = Fastify({ logger: true });
+const databaseUrl = process.env.DATABASE_URL;
+if (databaseUrl === undefined || databaseUrl.length === 0) {
+  throw new Error("DATABASE_URL is required to start the starter API.");
+}
 
-server.get("/health", async () => ({
-  service: "starter-api",
-  status: "ok",
-}));
+const server = createDatabaseBackedApp({
+  databaseUrl,
+  logger: true,
+  testLoginEnabled: process.env.TEST_LOGIN_ENABLED === "true",
+  webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:4173",
+});
 
 const host = process.env.HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.PORT ?? "3000", 10);

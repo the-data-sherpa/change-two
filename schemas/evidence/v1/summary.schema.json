@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/summary.schema.json",
+  "title": "Evidence-linked Run Summary v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "status", "results", "limitations"],
+  "properties": {
+    "schemaType": { "const": "summary" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "status": { "enum": ["accepted", "invalid", "stopped", "error"] },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["resultId", "statement", "evidenceLinks"],
+        "properties": {
+          "resultId": { "type": "string", "pattern": "^result:[a-z0-9][a-z0-9._-]*$" },
+          "statement": { "type": "string", "minLength": 1 },
+          "evidenceLinks": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^(event|artifact|visible-result|hidden-result|reviewer-finding):[a-z0-9][a-z0-9._-]*$" },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+  }
+}

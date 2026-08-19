@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/bundle-revision.schema.json",
+  "title": "Immutable Evidence Bundle Revision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "revisionId", "supersededRevisionId", "reason", "author", "timestamp", "supersededContentSetSha256", "currentContentSetSha256", "changedArtifacts"],
+  "properties": {
+    "schemaType": { "const": "bundle-revision" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "revisionId": { "type": "string", "pattern": "^revision:[a-z0-9][a-z0-9._-]*$" },
+    "supersededRevisionId": { "type": "string", "pattern": "^revision:[a-z0-9][a-z0-9._-]*$" },
+    "reason": { "type": "string", "minLength": 1 },
+    "author": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "supersededContentSetSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "currentContentSetSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "changedArtifacts": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true }
+  }
+}

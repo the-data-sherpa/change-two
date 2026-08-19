@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/intervention-event.schema.json",
+  "title": "Materialized Intervention v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "interventionId", "eventId", "timestamp", "category", "text", "humanActiveSeconds", "policyJustification", "source"],
+  "properties": {
+    "schemaType": { "const": "intervention-event" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "interventionId": { "type": "string", "pattern": "^intervention:[a-z0-9][a-z0-9._-]*$" },
+    "eventId": { "type": "string", "pattern": "^event:[a-z0-9][a-z0-9._-]*$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "category": { "enum": ["delivery", "clarification", "recovery", "review", "stop"] },
+    "text": { "type": "string", "minLength": 1 },
+    "humanActiveSeconds": { "type": "number", "minimum": 0 },
+    "policyJustification": { "type": ["string", "null"], "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/environment.schema.json",
+  "title": "Run Environment v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "runtimeImage", "platform", "dependencies", "source"],
+  "properties": {
+    "schemaType": { "const": "environment" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "runtimeImage": { "type": "string", "minLength": 1 },
+    "platform": { "type": "string", "minLength": 1 },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "version": { "type": ["string", "null"], "minLength": 1 }
+        }
+      }
+    },
+    "source": { "type": "string", "minLength": 1 }
+  }
+}

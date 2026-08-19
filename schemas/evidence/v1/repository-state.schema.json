@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/repository-state.schema.json",
+  "title": "Submitted Repository State v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "startingCommit", "submittedCommit", "workingTreeDirty", "patchPath", "source"],
+  "properties": {
+    "schemaType": { "const": "repository-state" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "startingCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "submittedCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "workingTreeDirty": { "type": "boolean" },
+    "patchPath": { "const": "submitted.patch" },
+    "source": { "type": "string", "minLength": 1 }
+  }
+}

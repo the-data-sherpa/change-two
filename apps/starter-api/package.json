@@ -5,13 +5,26 @@
   "type": "module",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/database/migrate.ts",
+    "db:seed": "tsx src/database/seed-cli.ts",
     "dev": "tsx watch src/server.ts",
+    "test": "vitest run test/tenant-mutation.test.ts",
+    "test:http": "vitest run test/http.integration.test.ts test/tenant-mutation.test.ts --fileParallelism=false",
+    "test:mutation": "vitest run test/tenant-mutation.test.ts",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
-    "fastify": "5.12.0"
+    "@fastify/cookie": "11.1.2",
+    "@fastify/cors": "11.3.0",
+    "drizzle-orm": "0.45.2",
+    "fastify": "5.12.0",
+    "pg": "8.23.0"
   },
   "devDependencies": {
-    "tsx": "4.23.12"
+    "@types/pg": "8.23.1",
+    "drizzle-kit": "0.31.10",
+    "tsx": "4.23.12",
+    "vitest": "4.1.11"
   }
 }

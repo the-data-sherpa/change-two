@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/capture-event.schema.json",
+  "title": "Ordered Capture Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "eventId", "runId", "sequence", "timestamp", "elapsedNanoseconds", "source", "eventType", "sanitization"],
+  "properties": {
+    "schemaType": { "const": "capture-event" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "eventId": { "type": "string", "pattern": "^event:[a-z0-9][a-z0-9._-]*$" },
+    "runId": { "type": "string", "pattern": "^run:[a-z0-9][a-z0-9._-]*$" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "elapsedNanoseconds": { "type": "integer", "minimum": 0 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "providerEventId", "providerFields"],
+      "properties": {
+        "kind": { "enum": ["provider", "harness", "operator", "evaluator", "reviewer", "repository"] },
+        "name": { "type": "string", "minLength": 1 },
+        "providerEventId": { "type": ["string", "null"], "minLength": 1 },
+        "providerFields": { "type": ["object", "null"] }
+      }
+    },
+    "eventType": {
+      "enum": ["manifest", "requirement", "environment", "message", "tool", "provider-native", "intervention", "submitted-patch", "repository-state", "costs", "visible-results", "hidden-results", "reviewer-findings", "summary"]
+    },
+    "sanitization": { "enum": ["raw", "quarantined", "sanitized", "approved"] },
+    "payload": {},
+    "artifactReference": { "$ref": "artifact-reference.schema.json" }
+  },
+  "oneOf": [
+    { "properties": { "payload": {} }, "required": ["payload"] },
+    {
+      "properties": {
+        "artifactReference": { "$ref": "artifact-reference.schema.json" }
+      },
+      "required": ["artifactReference"]
+    }
+  ]
+}

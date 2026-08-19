@@ -13,12 +13,16 @@ usage() {
   cat <<'USAGE'
 Usage:
   ./change-two bootstrap
-  ./change-two starter up|down|status|logs
+  ./change-two starter up|down|status|logs|migrate|seed
   ./change-two protocol validate|validate-matrix <document.json>
   ./change-two protocol check-fixtures
+  ./change-two evidence materialize <capture.jsonl> <bundle-dir>
+  ./change-two evidence replay <capture.jsonl> <bundle-dir>
+  ./change-two evidence verify <bundle-dir>
+  ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
   ./change-two check
-  ./change-two package starter-api|starter-web|protocol build|typecheck|test
-  ./change-two verify starter|reproducible-build
+  ./change-two package starter-api|starter-web|protocol|evidence build|typecheck|test
+  ./change-two verify starter|starter-http|starter-browser|reproducible-build
 USAGE
 }
 
@@ -61,6 +65,12 @@ starter() {
       printf 'Starter web: http://localhost:%s\n' "${WEB_PORT:-4173}"
       printf 'Starter API: http://localhost:%s/health\n' "${API_PORT:-4300}"
       ;;
+    migrate)
+      compose run --build --rm migrate
+      ;;
+    seed)
+      compose run --build --rm seed
+      ;;
     down)
       compose down --remove-orphans
       ;;
@@ -93,7 +103,7 @@ package_diagnostic() {
   local script=${2:-}
 
   case "$workspace" in
-    protocol|starter-api|starter-web) ;;
+    evidence|protocol|starter-api|starter-web) ;;
     *)
       usage
       exit 2
@@ -114,6 +124,11 @@ package_diagnostic() {
 protocol() {
   require_docker
   run_workspace --silent --filter "@change-two/protocol" exec tsx src/cli.ts "$@"
+}
+
+evidence() {
+  require_docker
+  run_workspace --silent --filter "@change-two/evidence" exec tsx src/cli.ts "$@"
 }
 
 verify_starter() {
@@ -152,6 +167,58 @@ verify_starter() {
   fi
 
   echo "Starter web, API, empty feature surface, and PostgreSQL are healthy."
+}
+
+verify_starter_http() {
+  require_docker
+  local result=0
+
+  if ! compose up --detach --wait postgres; then
+    result=1
+  elif ! compose run --build --rm migrate; then
+    result=1
+  elif ! compose run --build --rm --no-deps api \
+    pnpm --filter "@change-two/starter-api" test:http; then
+    result=1
+  fi
+
+  compose down --remove-orphans
+  if [[ $result -ne 0 ]]; then
+    echo "Starter HTTP verification failed." >&2
+    return "$result"
+  fi
+  echo "Starter HTTP session, seed, and tenant-authority checks passed."
+}
+
+verify_starter_browser() {
+  require_docker
+  local result=0
+  local image=change-two-browser:local
+
+  if ! compose up --build --detach --wait; then
+    result=1
+  elif ! docker build \
+    --file docker/workspace.Dockerfile \
+    --target browser \
+    --tag "$image" \
+    --build-arg "NODE_IMAGE=$NODE_IMAGE" \
+    --build-arg "PNPM_VERSION=$PNPM_VERSION" \
+    .; then
+    result=1
+  elif ! docker run --rm \
+    --network host \
+    --env "STARTER_WEB_URL=http://localhost:${WEB_PORT:-4173}" \
+    "$image" \
+    pnpm --filter "@change-two/starter-web" test:browser; then
+    result=1
+  fi
+
+  compose down --remove-orphans
+  if [[ $result -ne 0 ]]; then
+    echo "Starter browser verification failed." >&2
+    return "$result"
+  fi
+  echo "Starter browser identity and Organization checks passed."
 }
 
 verify_reproducible_build() {
@@ -202,11 +269,17 @@ case "${1:-}" in
     shift
     protocol "$@"
     ;;
+  evidence)
+    shift
+    evidence "$@"
+    ;;
   verify)
     shift
     case "${1:-}" in
       reproducible-build) verify_reproducible_build ;;
       starter) verify_starter ;;
+      starter-browser) verify_starter_browser ;;
+      starter-http) verify_starter_http ;;
       *) usage; exit 2 ;;
     esac
     ;;

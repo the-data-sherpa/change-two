@@ -1,0 +1,8 @@
+{
+  "schemaType": "correction-request",
+  "schemaVersion": "evidence/v1",
+  "revisionId": "revision:fixture-2",
+  "reason": "Correct the submitted patch fixture.",
+  "author": "fixture-publisher",
+  "timestamp": "2026-01-02T00:00:00Z"
+}

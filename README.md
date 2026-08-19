@@ -51,11 +51,11 @@ Automated scanner alerts do not count as confirmed security defects without repr
 
 ## Current status
 
-The deterministic workspace and starter runtime are implemented. No measured Season 0 Run has started.
+The deterministic workspace and infrastructure-only starter are implemented. No measured Season 0 Run has started.
 
 The initial build ends after one accepted, unmeasured Change 0 dry run. That dry run must exercise the runner, evaluator, evidence pipeline, sanitizer, and static results site in clean environments.
 
-The next work package is **WP3: Starter client, API, and deterministic identity** in [`INITIAL-BUILD.md`](./INITIAL-BUILD.md).
+The starter contains only deterministic Users, Organizations, memberships, and server-side sessions. Its support-inbox surface is intentionally empty.
 
 ## Local setup
 
@@ -80,19 +80,46 @@ Stop the runtime with:
 
 Copy `.env.example` to `.env` only when you need different host ports. The example contains no credentials.
 
+### Starter database and Visible Checks
+
+`starter up` applies the inspectable Drizzle migrations and deterministic seed before it starts the API. The same operations are available independently and are safe to repeat:
+
+```bash
+./change-two starter migrate
+./change-two starter seed
+```
+
+Run the HTTP authorization and clean-seed checks, including the controlled tenant-authority mutation, with:
+
+```bash
+./change-two verify starter-http
+```
+
+Run the Playwright identity-selection and Organization visibility flow with:
+
+```bash
+./change-two verify starter-browser
+```
+
+The test login surface is enabled only by the local starter environment. It sets an opaque, HTTP-only cookie backed by a server-side session. Organization access is derived from that authenticated User on every request; client-supplied identity or membership fields provide no authority.
+
 ## Repository commands
 
 ```text
 ./change-two bootstrap
-./change-two starter up|down|status|logs
+./change-two starter up|down|status|logs|migrate|seed
 ./change-two protocol validate|validate-matrix <document.json>
 ./change-two protocol check-fixtures
+./change-two evidence materialize <capture.jsonl> <bundle-dir>
+./change-two evidence replay <capture.jsonl> <bundle-dir>
+./change-two evidence verify <bundle-dir>
+./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
 ./change-two check
-./change-two package starter-api|starter-web|protocol build|typecheck|test
-./change-two verify starter|reproducible-build
+./change-two package starter-api|starter-web|protocol|evidence build|typecheck|test
+./change-two verify starter|starter-http|starter-browser|reproducible-build
 ```
 
-`check` runs strict TypeScript checks and production builds in a clean container. `verify starter` exercises the running web, API, empty feature surface, and PostgreSQL. `verify reproducible-build` runs two uncached clean builds and compares their application artifacts.
+`check` runs strict TypeScript checks, production builds, and database-independent tests in a clean container. `verify starter` exercises the running web, API, empty feature surface, and PostgreSQL. `verify starter-http` resets the observable PostgreSQL schemas, migrates, seeds repeatedly, checks session-backed tenant access, and proves the tenant baseline rejects a controlled membership defect. `verify starter-browser` runs the deterministic identity and Organization flow in Chromium. `verify reproducible-build` runs two uncached clean builds and compares their application artifacts.
 
 ## Protocol validation
 
@@ -112,6 +139,28 @@ Validate a protocol document or evaluation matrix:
 ```
 
 Validation errors identify the failing JSON path and rule. The Change 0 matrix rejects missing coverage, broken references, duplicate identifiers, orphan Checks, and structural-only coverage for severity-blocking Criteria.
+
+## Evidence bundles
+
+Capture Events use independently versioned schemas under `schemas/evidence/v1`. Event sequence numbers must start at one and remain contiguous; wall-clock timestamps do not determine ordering. Artifact paths are relative to the capture and must remain under `artifacts/`.
+
+Materialize or deterministically replay a capture, then verify the result:
+
+```bash
+./change-two evidence materialize fixtures/evidence/accepted/capture.jsonl /tmp/change-two-bundle
+./change-two evidence replay fixtures/evidence/accepted/capture.jsonl /tmp/change-two-replay
+./change-two evidence verify /tmp/change-two-bundle
+```
+
+Materialization and replay refuse to overwrite an existing directory. Verification rejects missing or undeclared files, invalid schemas, broken evidence links and artifact references, non-contiguous sequences, and checksum changes. `checksums.json` covers itself with the schema-defined `self-canonical` mode: verification hashes the canonical manifest with only its own digest zeroed.
+
+Corrections require a new capture whose manifest declares the new revision identifier, a verified previous bundle, a new output directory, and correction metadata:
+
+```bash
+./change-two evidence correct fixtures/evidence/correction/capture.jsonl /tmp/change-two-bundle /tmp/change-two-bundle-r2 fixtures/evidence/correction/request.json
+```
+
+The generated `revision.json` links the superseded and current content checksum sets and lists changed artifacts. The correction command verifies but never writes the previous bundle.
 
 ## Architecture
 

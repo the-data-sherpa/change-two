@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/visible-results.schema.json",
+  "title": "Visible Check Results v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "results"],
+  "properties": {
+    "schemaType": { "const": "visible-results" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "covers", "outcome", "severity", "existedBeforeExecution", "reproductionArtifact", "sourceEventIds"],
+        "properties": {
+          "checkId": { "type": "string", "minLength": 1 },
+          "covers": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+          "outcome": { "enum": ["pass", "fail", "skipped", "error"] },
+          "severity": { "enum": ["blocking", "high", "medium", "low", "informational"] },
+          "existedBeforeExecution": { "type": "boolean" },
+          "reproductionArtifact": { "oneOf": [{ "$ref": "artifact-reference.schema.json" }, { "type": "null" }] },
+          "sourceEventIds": { "type": "array", "items": { "type": "string", "pattern": "^event:[a-z0-9][a-z0-9._-]*$" }, "minItems": 1, "uniqueItems": true }
+        }
+      }
+    }
+  }
+}

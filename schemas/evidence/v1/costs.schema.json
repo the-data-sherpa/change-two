@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/costs.schema.json",
+  "title": "Run Costs and Usage v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "usage", "modelCosts", "humanActiveSecondsByRole", "wallClockSeconds", "coverageGaps"],
+  "properties": {
+    "schemaType": { "const": "costs" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "usage": { "type": "array", "items": { "$ref": "#/$defs/usage" } },
+    "modelCosts": { "type": "array", "items": { "$ref": "#/$defs/modelCost" } },
+    "humanActiveSecondsByRole": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    },
+    "wallClockSeconds": { "type": "number", "minimum": 0 },
+    "coverageGaps": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "providerEventId", "providerFields"],
+      "properties": {
+        "kind": { "enum": ["provider", "harness", "operator"] },
+        "name": { "type": "string", "minLength": 1 },
+        "providerEventId": { "type": ["string", "null"], "minLength": 1 },
+        "providerFields": { "type": ["object", "null"] }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measurement", "inputTokens", "outputTokens", "totalTokens", "source"],
+      "properties": {
+        "measurement": { "enum": ["provider-reported", "estimated", "unavailable"] },
+        "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "totalTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "source": { "$ref": "#/$defs/source" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "measurement": { "const": "unavailable" } }, "required": ["measurement"] },
+          "then": { "properties": { "inputTokens": { "const": null }, "outputTokens": { "const": null }, "totalTokens": { "const": null } } }
+        }
+      ]
+    },
+    "modelCost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measurement", "amount", "currency", "source"],
+      "properties": {
+        "measurement": { "enum": ["provider-reported", "calculated", "unavailable"] },
+        "amount": { "type": ["number", "null"], "minimum": 0 },
+        "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+        "source": { "$ref": "#/$defs/source" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "measurement": { "const": "unavailable" } }, "required": ["measurement"] },
+          "then": { "properties": { "amount": { "const": null }, "currency": { "const": null } } }
+        }
+      ]
+    }
+  }
+}

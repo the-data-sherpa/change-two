@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/manifest.schema.json",
+  "title": "Evidence Bundle Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "bundleRevisionId", "seasonId", "lineageId", "changeId", "runId", "startingCommit", "endingCommit", "agent", "model", "harness", "policyId", "budgetId", "startedAt", "endedAt", "status"],
+  "properties": {
+    "schemaType": { "const": "manifest" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "bundleRevisionId": { "type": "string", "pattern": "^revision:[a-z0-9][a-z0-9._-]*$" },
+    "seasonId": { "type": "string", "minLength": 1 },
+    "lineageId": { "type": "string", "minLength": 1 },
+    "changeId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "pattern": "^run:[a-z0-9][a-z0-9._-]*$" },
+    "startingCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "endingCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "agent": { "$ref": "#/$defs/versionedTool" },
+    "model": { "$ref": "#/$defs/versionedTool" },
+    "harness": { "$ref": "#/$defs/versionedTool" },
+    "policyId": { "type": "string", "minLength": 1 },
+    "budgetId": { "type": "string", "minLength": 1 },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "endedAt": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["accepted", "invalid", "stopped", "error"] }
+  },
+  "$defs": {
+    "versionedTool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": ["string", "null"], "minLength": 1 }
+      }
+    }
+  }
+}

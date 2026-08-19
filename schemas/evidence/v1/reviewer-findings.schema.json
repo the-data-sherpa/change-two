@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/reviewer-findings.schema.json",
+  "title": "Reviewer Findings v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "findings"],
+  "properties": {
+    "schemaType": { "const": "reviewer-findings" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "severity", "status", "statement", "sourceEventIds", "artifactReferences"],
+        "properties": {
+          "findingId": { "type": "string", "pattern": "^finding:[a-z0-9][a-z0-9._-]*$" },
+          "severity": { "enum": ["blocking", "high", "medium", "low", "informational"] },
+          "status": { "enum": ["confirmed", "rejected", "unresolved"] },
+          "statement": { "type": "string", "minLength": 1 },
+          "sourceEventIds": { "type": "array", "items": { "type": "string", "pattern": "^event:[a-z0-9][a-z0-9._-]*$" }, "minItems": 1, "uniqueItems": true },
+          "artifactReferences": { "type": "array", "items": { "$ref": "artifact-reference.schema.json" } }
+        }
+      }
+    }
+  }
+}

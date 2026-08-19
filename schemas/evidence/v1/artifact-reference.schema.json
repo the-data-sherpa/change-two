@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/artifact-reference.schema.json",
+  "title": "Evidence Artifact Reference v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "artifactId", "path", "sha256", "mediaType", "source"],
+  "properties": {
+    "schemaType": { "const": "artifact-reference" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "artifactId": { "type": "string", "pattern": "^artifact:[a-z0-9][a-z0-9._-]*$" },
+    "path": { "type": "string", "pattern": "^artifacts/[A-Za-z0-9][A-Za-z0-9._/-]*$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "mediaType": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "providerEventId", "providerFields"],
+      "properties": {
+        "kind": { "enum": ["provider", "harness", "operator", "evaluator", "reviewer", "repository"] },
+        "name": { "type": "string", "minLength": 1 },
+        "providerEventId": { "type": ["string", "null"], "minLength": 1 },
+        "providerFields": { "type": ["object", "null"] }
+      }
+    }
+  }
+}

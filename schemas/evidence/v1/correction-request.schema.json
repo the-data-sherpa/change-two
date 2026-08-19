@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/evidence/v1/correction-request.schema.json",
+  "title": "Bundle Correction Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "revisionId", "reason", "author", "timestamp"],
+  "properties": {
+    "schemaType": { "const": "correction-request" },
+    "schemaVersion": { "const": "evidence/v1" },
+    "revisionId": { "type": "string", "pattern": "^revision:[a-z0-9][a-z0-9._-]*$" },
+    "reason": { "type": "string", "minLength": 1 },
+    "author": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}
