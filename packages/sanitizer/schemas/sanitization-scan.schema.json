@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/sanitization-scan/v1",
+  "title": "Sanitization Scan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "scanId", "generatedAt", "sourceBundle", "policy", "status", "findings"],
+  "properties": {
+    "schemaType": { "const": "sanitization-scan" },
+    "schemaVersion": { "const": "sanitization/v1" },
+    "scanId": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "sourceBundle": { "$ref": "#/$defs/bundle" },
+    "policy": { "$ref": "#/$defs/policy" },
+    "status": { "enum": ["clean", "redactable", "quarantined"] },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "bundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["revisionId", "contentSetSha256"],
+      "properties": { "revisionId": { "type": "string", "minLength": 1 }, "contentSetSha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["releaseId", "sha256"],
+      "properties": { "releaseId": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["findingId", "path", "rule", "category", "disposition", "reason", "sourceSha256", "matchSha256"],
+      "properties": {
+        "findingId": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "rule": { "type": "string", "minLength": 1 },
+        "category": { "enum": ["credential", "authentication", "private-path", "unrelated-history", "unreleased-content", "ambiguous"] },
+        "disposition": { "enum": ["redact", "block", "ambiguous"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "sourceSha256": { "$ref": "#/$defs/sha256" },
+        "matchSha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

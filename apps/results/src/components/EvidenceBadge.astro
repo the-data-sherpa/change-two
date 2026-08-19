@@ -1,0 +1,8 @@
+---
+interface Props {
+  readonly evidenceClass: "practice" | "measured";
+}
+const { evidenceClass } = Astro.props;
+const label = evidenceClass === "practice" ? "Practice evidence — not measured" : "Measured evidence";
+---
+<span class:list={["badge", `badge--${evidenceClass}`]}>{label}</span>

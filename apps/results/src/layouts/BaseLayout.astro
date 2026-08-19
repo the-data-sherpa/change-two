@@ -1,0 +1,34 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  readonly description: string;
+  readonly title: string;
+}
+
+const { description, title } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title} · Change Two Evidence</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to evidence</a>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/">Change Two Evidence</a>
+        <nav aria-label="Primary" class="site-nav"><a href="/">Seasons</a></nav>
+      </div>
+    </header>
+    <main id="content"><slot /></main>
+    <footer class="site-footer"><div class="site-footer__inner">Static, checksum-verified publication evidence.</div></footer>
+  </body>
+</html>
+<style>
+  .skip-link { position: absolute; left: -999rem; top: 0; z-index: 2; padding: var(--space-3); background: var(--color-ink); color: var(--color-surface); }
+  .skip-link:focus { left: var(--space-3); }
+</style>

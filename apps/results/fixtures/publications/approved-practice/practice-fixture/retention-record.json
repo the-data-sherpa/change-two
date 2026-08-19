@@ -1,0 +1,29 @@
+{
+  "schemaType": "retention-record",
+  "schemaVersion": "sanitization/v1",
+  "sourceContentSetSha256": "996ef5fc8565536aeeab2e2f4a0df4631ebb39b6a83ea8c88c552861c88ba2c5",
+  "publicationApprovedAt": "2026-01-04T00:00:00Z",
+  "destructionDueAt": "2026-02-03T00:00:00Z",
+  "events": [
+    {
+      "eventId": "retention-event:practice-fixture-scheduled",
+      "eventType": "scheduled",
+      "recordedAt": "2026-01-04T00:00:00Z",
+      "actor": {
+        "kind": "automation",
+        "identifier": "fixture-retention-scheduler"
+      },
+      "reason": "Schedule synthetic restricted source evidence for destruction."
+    },
+    {
+      "eventId": "retention-event:practice-fixture-destroyed",
+      "eventType": "destroyed",
+      "recordedAt": "2026-01-05T00:00:00Z",
+      "actor": {
+        "kind": "human",
+        "identifier": "fixture-reviewer"
+      },
+      "reason": "Synthetic restricted source fixture was destroyed after publication."
+    }
+  ]
+}

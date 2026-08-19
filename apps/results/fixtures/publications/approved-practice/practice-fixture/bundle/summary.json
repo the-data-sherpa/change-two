@@ -1,0 +1,1 @@
+{"limitations":["Synthetic fixture only."],"results":[{"evidenceLinks":["event:message","artifact:visible-reproduction","visible-result:visible-check","hidden-result:released-check","reviewer-finding:review-1"],"resultId":"result:fixture","statement":"The accepted fixture completed."}],"schemaType":"summary","schemaVersion":"evidence/v1","status":"accepted"}

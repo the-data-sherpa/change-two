@@ -1,12 +1,12 @@
 {
-  "name": "@change-two/evidence",
+  "name": "@change-two/sanitizer",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./dist/index.js"
+      "default": "./dist/src/index.js"
     }
   },
   "scripts": {
@@ -15,6 +15,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@change-two/evidence": "workspace:*",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1"
   },

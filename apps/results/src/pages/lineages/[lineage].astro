@@ -1,0 +1,28 @@
+---
+import EvidenceBadge from "../../components/EvidenceBadge.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { latestByRun, loadPublications, rawBundleHref, routeSegment, runHref, type Publication } from "../../lib/publications.js";
+
+export function getStaticPaths() {
+  const groups = Map.groupBy(latestByRun(loadPublications()), (publication) => publication.run.manifest.lineageId);
+  return [...groups.entries()].map(([lineageId, publications]) => ({
+    params: { lineage: routeSegment(lineageId) },
+    props: { lineageId, publications: publications.toSorted((left, right) => left.run.manifest.startedAt.localeCompare(right.run.manifest.startedAt)) },
+  }));
+}
+interface Props { readonly lineageId: string; readonly publications: readonly Publication[]; }
+const { lineageId, publications } = Astro.props;
+---
+<BaseLayout description={`Repository evolution for ${lineageId}.`} title={lineageId}>
+  <nav aria-label="Breadcrumb" class="breadcrumbs"><ol><li><a href="/">Seasons</a></li><li aria-current="page">{lineageId}</li></ol></nav>
+  <header class="page-heading"><p class="eyebrow">Lineage timeline</p><h1>{lineageId}</h1><p class="lede">Ordered submitted repository states across released Changes.</p></header>
+  <section class="section" aria-labelledby="timeline-heading"><h2 id="timeline-heading">Submission history</h2>
+    <ol class="timeline">{publications.map((publication) => <li>
+      <EvidenceBadge evidenceClass={publication.approval.evidenceClass} />
+      <h3><a href={runHref(publication)}>{publication.run.manifest.changeId} · {publication.run.manifest.runId}</a></h3>
+      <p><span class:list={["status", `status--${publication.run.summary.status}`]}>{publication.run.summary.status}</span> · {publication.run.interventions.length} Intervention{publication.run.interventions.length === 1 ? "" : "s"}</p>
+      <p class="mono"><a href={rawBundleHref(publication, "repository-state.json")}>{publication.run.manifest.startingCommit.slice(0, 10)} → {publication.run.manifest.endingCommit.slice(0, 10)}</a></p>
+      <p class="source"><a href={`/changes/${routeSegment(publication.run.manifest.changeId)}/`}>Compare this Change</a></p>
+    </li>)}</ol>
+  </section>
+</BaseLayout>

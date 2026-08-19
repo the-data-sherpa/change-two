@@ -1,0 +1,38 @@
+---
+import EvidenceBadge from "../../components/EvidenceBadge.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { latestByRun, loadPublications, routeSegment, runHref, type Publication } from "../../lib/publications.js";
+
+export function getStaticPaths() {
+  const publications = latestByRun(loadPublications());
+  const seasons = Map.groupBy(publications, (publication) => publication.run.manifest.seasonId);
+  return [...seasons.entries()].map(([seasonId, seasonPublications]) => ({
+    params: { season: routeSegment(seasonId) }, props: { publications: seasonPublications, seasonId },
+  }));
+}
+interface Props { readonly publications: readonly Publication[]; readonly seasonId: string; }
+const { publications, seasonId } = Astro.props;
+const lineages = [...new Set(publications.map((publication) => publication.run.manifest.lineageId))];
+const changes = [...new Set(publications.map((publication) => publication.run.manifest.changeId))];
+---
+<BaseLayout description={`Evidence overview for ${seasonId}.`} title={seasonId}>
+  <nav aria-label="Breadcrumb" class="breadcrumbs"><ol><li><a href="/">Seasons</a></li><li aria-current="page">{seasonId}</li></ol></nav>
+  <header class="page-heading">
+    <p class="eyebrow">Season overview</p><h1>{seasonId}</h1>
+    <p class="lede">Does an agent-built application remain correct, secure, and evolvable as product Changes compound? This page indexes released evidence; practice Runs are not measured Season evidence.</p>
+  </header>
+  <section class="section" aria-labelledby="season-structure"><h2 id="season-structure">Evidence structure</h2>
+    <div class="grid">
+      <div class="panel"><h3>Lineages</h3>{lineages.map((id) => <p><a href={`/lineages/${routeSegment(id)}/`}>{id}</a></p>)}</div>
+      <div class="panel"><h3>Changes</h3>{changes.map((id) => <p><a href={`/changes/${routeSegment(id)}/`}>{id} comparison</a></p>)}</div>
+    </div>
+  </section>
+  <section class="section" aria-labelledby="season-runs"><h2 id="season-runs">Released Runs</h2>
+    <ul class="list">{publications.map((publication) => <li>
+      <EvidenceBadge evidenceClass={publication.approval.evidenceClass} />
+      <h3><a href={runHref(publication)}>{publication.run.manifest.runId}</a></h3>
+      <p>{publication.run.manifest.lineageId} · {publication.run.manifest.changeId} · <span class:list={["status", `status--${publication.run.summary.status}`]}>{publication.run.summary.status}</span></p>
+      <p class="source">Bundle Revision {publication.verification.revisionId}</p>
+    </li>)}</ul>
+  </section>
+</BaseLayout>

@@ -1,0 +1,32 @@
+{
+  "schemaType": "sanitization-report",
+  "schemaVersion": "sanitization/v1",
+  "reportId": "sanitization-report:practice-fixture-2",
+  "generatedAt": "2026-01-03T00:00:00Z",
+  "sourceBundle": {
+    "revisionId": "revision:fixture-1",
+    "contentSetSha256": "996ef5fc8565536aeeab2e2f4a0df4631ebb39b6a83ea8c88c552861c88ba2c5"
+  },
+  "sanitizedBundle": {
+    "revisionId": "revision:fixture-2",
+    "contentSetSha256": "6afad41a43d50a0e88053c4d9b8e2058a2a7bb19ed8265a821528ce8a9316532"
+  },
+  "policy": {
+    "releaseId": "sanitization-policy:practice-fixture",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "status": "passed",
+  "findings": [],
+  "transformations": [
+    {
+      "sourcePath": "submitted.patch",
+      "sourceSha256": "2474cc5422fdacbe688efdbff2889af789d1439d28f84876355f27c2a77a8e08",
+      "sanitizedPath": "submitted.patch",
+      "sanitizedSha256": "ce12a53ec49a7160357ad1b73c7e9a27b8edf6bd7252593cfd672b6f8bf7003e",
+      "rule": "synthetic-practice-transformation",
+      "reason": "Synthetic checksum-linked transformation for the public practice fixture."
+    }
+  ],
+  "blockers": [],
+  "ambiguities": []
+}

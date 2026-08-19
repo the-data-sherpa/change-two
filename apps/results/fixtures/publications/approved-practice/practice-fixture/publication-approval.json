@@ -1,0 +1,15 @@
+{
+  "schemaType": "publication-approval",
+  "schemaVersion": "sanitization/v1",
+  "approvalId": "publication-approval:practice-fixture-2",
+  "reportId": "sanitization-report:practice-fixture-2",
+  "sanitizedContentSetSha256": "6afad41a43d50a0e88053c4d9b8e2058a2a7bb19ed8265a821528ce8a9316532",
+  "decision": "approved",
+  "evidenceClass": "practice",
+  "approvedAt": "2026-01-04T00:00:00Z",
+  "approver": {
+    "kind": "human",
+    "identifier": "fixture-reviewer"
+  },
+  "statement": "Approved for publication as synthetic practice evidence only."
+}

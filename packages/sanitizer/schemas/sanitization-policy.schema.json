@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/sanitization-policy/v1",
+  "title": "Sanitization Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "releaseId", "releasedChangeIds", "releasedHiddenCheckIds"],
+  "properties": {
+    "schemaType": { "const": "sanitization-policy" },
+    "schemaVersion": { "const": "sanitization/v1" },
+    "releaseId": { "type": "string", "minLength": 1 },
+    "releasedChangeIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+    "releasedHiddenCheckIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+  }
+}

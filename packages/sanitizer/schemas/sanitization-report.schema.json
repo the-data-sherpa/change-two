@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/sanitization-report/v1",
+  "title": "Sanitization Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "reportId", "generatedAt", "sourceBundle", "sanitizedBundle", "policy", "status", "findings", "transformations", "blockers", "ambiguities"],
+  "properties": {
+    "schemaType": { "const": "sanitization-report" },
+    "schemaVersion": { "const": "sanitization/v1" },
+    "reportId": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "sourceBundle": { "$ref": "#/$defs/bundle" },
+    "sanitizedBundle": { "$ref": "#/$defs/bundle" },
+    "policy": { "$ref": "#/$defs/policy" },
+    "status": { "const": "passed" },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "transformations": { "type": "array", "items": { "$ref": "#/$defs/transformation" } },
+    "blockers": { "type": "array", "maxItems": 0 },
+    "ambiguities": { "type": "array", "maxItems": 0 }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "bundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["revisionId", "contentSetSha256"],
+      "properties": { "revisionId": { "type": "string", "minLength": 1 }, "contentSetSha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["releaseId", "sha256"],
+      "properties": { "releaseId": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["findingId", "path", "rule", "category", "disposition", "reason", "sourceSha256", "matchSha256"],
+      "properties": {
+        "findingId": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 }, "rule": { "type": "string", "minLength": 1 },
+        "category": { "enum": ["credential", "authentication", "private-path", "unrelated-history", "unreleased-content", "ambiguous"] },
+        "disposition": { "const": "redact" }, "reason": { "type": "string", "minLength": 1 },
+        "sourceSha256": { "$ref": "#/$defs/sha256" }, "matchSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "transformation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourcePath", "sourceSha256", "sanitizedPath", "sanitizedSha256", "rule", "reason"],
+      "properties": {
+        "sourcePath": { "type": "string", "minLength": 1 }, "sourceSha256": { "$ref": "#/$defs/sha256" },
+        "sanitizedPath": { "type": "string", "minLength": 1 }, "sanitizedSha256": { "$ref": "#/$defs/sha256" },
+        "rule": { "type": "string", "minLength": 1 }, "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@change-two/results",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "astro build",
+    "dev": "astro dev",
+    "preview": "astro preview",
+    "test": "node --import tsx --test test/*.test.ts",
+    "test:browser": "playwright test",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@change-two/evidence": "workspace:*",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@playwright/test": "1.62.1",
+    "astro": "7.2.4",
+    "tsx": "4.23.12"
+  }
+}

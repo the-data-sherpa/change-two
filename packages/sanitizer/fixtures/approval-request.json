@@ -1,0 +1,11 @@
+{
+  "approvalId": "approval:synthetic-practice-1",
+  "evidenceClass": "practice",
+  "immutableReleaseAssetUrl": "https://example.invalid/releases/synthetic-practice-bundle.tgz",
+  "approvedAt": "2026-01-02T00:00:00.000Z",
+  "approver": {
+    "kind": "human",
+    "identifier": "synthetic-reviewer"
+  },
+  "statement": "I reviewed the synthetic sanitization report and approve this practice publication."
+}

@@ -22,8 +22,13 @@ Usage:
   ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
   ./change-two runner execute <plan.json> <output-dir>
   ./change-two runner timer-start|timer-stop|timer-correct|intervene ...
+  ./change-two sanitizer scan <bundle-dir> <policy.json> <scan.json>
+  ./change-two sanitizer sanitize <bundle-dir> <publication-dir> <policy.json> <request.json>
+  ./change-two sanitizer approve <publication-dir> <approval.json>
+  ./change-two sanitizer retention <publication-dir> <source-bundle-dir> <event.json>
+  ./change-two site build [publication-dir]
   ./change-two check
-  ./change-two package starter-api|starter-web|protocol|evidence|runner build|typecheck|test
+  ./change-two package starter-api|starter-web|results|protocol|evidence|runner|sanitizer build|typecheck|test
   ./change-two verify runner|starter|starter-http|starter-browser|reproducible-build
 USAGE
 }
@@ -117,7 +122,7 @@ package_diagnostic() {
   local script=${2:-}
 
   case "$workspace" in
-    evidence|protocol|runner|starter-api|starter-web) ;;
+    evidence|protocol|runner|sanitizer|results|starter-api|starter-web) ;;
     *)
       usage
       exit 2
@@ -143,6 +148,36 @@ protocol() {
 evidence() {
   require_docker
   run_workspace --silent --filter "@change-two/evidence" exec tsx src/cli.ts "$@"
+}
+
+sanitizer() {
+  require_docker
+  run_workspace --silent --filter "@change-two/sanitizer" exec tsx src/cli.ts "$@"
+}
+
+site() {
+  require_docker
+  [[ "${1:-}" == "build" ]] || { usage; exit 2; }
+  [[ $# -le 2 ]] || { usage; exit 2; }
+
+  if [[ $# -eq 1 ]]; then
+    run_workspace --filter "@change-two/results" run build
+    return
+  fi
+
+  local publications
+  publications=$(realpath -- "$2")
+  [[ -d "$publications" ]] || { echo "Publication input is not a directory: $2" >&2; exit 2; }
+  docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    --env COREPACK_HOME=/tmp/corepack \
+    --env HOME=/tmp \
+    --env RESULTS_PUBLICATIONS_DIR=/publications \
+    --volume "$ROOT:/workspace" \
+    --volume "$publications:/publications:ro" \
+    --workdir /workspace \
+    "$NODE_IMAGE" \
+    corepack pnpm --filter "@change-two/results" run build
 }
 
 runner() {
@@ -296,6 +331,14 @@ case "${1:-}" in
   evidence)
     shift
     evidence "$@"
+    ;;
+  sanitizer)
+    shift
+    sanitizer "$@"
+    ;;
+  site)
+    shift
+    site "$@"
     ;;
   runner)
     shift

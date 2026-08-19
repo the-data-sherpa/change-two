@@ -1,0 +1,80 @@
+---
+import EvidenceBadge from "../../components/EvidenceBadge.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  anchorId, evidenceHref, latestByRun, loadPublications, rawBundleHref, routeSegment,
+  type CheckResult, type Publication,
+} from "../../lib/publications.js";
+
+export function getStaticPaths() {
+  const all = loadPublications();
+  const groups = Map.groupBy(all, (publication) => publication.run.manifest.runId);
+  const latest = latestByRun(all);
+  return latest.map((publication) => ({
+    params: { run: routeSegment(publication.run.manifest.runId) },
+    props: { publication, revisions: groups.get(publication.run.manifest.runId) ?? [publication] },
+  }));
+}
+interface Props { readonly publication: Publication; readonly revisions: readonly Publication[]; }
+const { publication, revisions } = Astro.props;
+const { run } = publication;
+const renderResultSource = (result: CheckResult) => result.sourceEventIds.map((eventId) => ({ eventId, href: `#${anchorId("event", eventId)}` }));
+---
+<BaseLayout description={`Released evidence for ${run.manifest.runId}.`} title={run.manifest.runId}>
+  <nav aria-label="Breadcrumb" class="breadcrumbs"><ol><li><a href="/">Seasons</a></li><li><a href={`/seasons/${routeSegment(run.manifest.seasonId)}/`}>{run.manifest.seasonId}</a></li><li aria-current="page">{run.manifest.runId}</li></ol></nav>
+  <header class="page-heading">
+    <EvidenceBadge evidenceClass={publication.approval.evidenceClass} />
+    <p class="eyebrow">Run evidence</p><h1>{run.manifest.runId}</h1>
+    <p class="lede">{run.manifest.lineageId} · {run.manifest.changeId}. Released {publication.approval.approvedAt} as Bundle Revision {publication.verification.revisionId}.</p>
+    <dl class="meta">
+      <div><dt>Outcome</dt><dd><a class:list={["status", `status--${run.summary.status}`]} href={rawBundleHref(publication, "summary.json")}>{run.summary.status}</a></dd></div>
+      <div><dt>Agent / model</dt><dd><a href={rawBundleHref(publication, "manifest.json")}>{run.manifest.agent.name} / {run.manifest.model.name}</a></dd></div>
+      <div><dt>Policy / Budget</dt><dd><a href={rawBundleHref(publication, "manifest.json")}>{run.manifest.policyId} / {run.manifest.budgetId}</a></dd></div>
+      <div><dt>Content set</dt><dd><a class="hash" href={rawBundleHref(publication, "checksums.json")}>{publication.verification.contentSetSha256}</a></dd></div>
+    </dl>
+  </header>
+
+  <section class="section" aria-labelledby="outcomes-heading"><div class="section-heading"><h2 id="outcomes-heading">Outcomes</h2><a class="source" href={rawBundleHref(publication, "summary.json")}>summary.json</a></div>
+    <ul class="list">{run.summary.results.map((result) => <li><h3>{result.statement}</h3><ul class="evidence-links" aria-label={`Supporting evidence for ${result.resultId}`}>{result.evidenceLinks.map((link) => <li><a href={evidenceHref(publication, link)}>{link}</a></li>)}</ul></li>)}</ul>
+    {run.summary.limitations.length > 0 && <div class="panel"><h3>Limitations</h3><ul>{run.summary.limitations.map((limitation) => <li>{limitation}</li>)}</ul></div>}
+  </section>
+
+  <section class="section" aria-labelledby="requirement-heading"><div class="section-heading"><h2 id="requirement-heading">Change requirement and Submission</h2><a class="source" href={rawBundleHref(publication, "requirement.md")}>requirement.md</a></div>
+    <pre>{run.requirement}</pre>
+    <dl class="meta"><div><dt>Starting commit</dt><dd><a class="hash" href={rawBundleHref(publication, "repository-state.json")}>{run.repositoryState.startingCommit}</a></dd></div><div><dt>Submitted commit</dt><dd><a class="hash" href={rawBundleHref(publication, "repository-state.json")}>{run.repositoryState.submittedCommit}</a></dd></div></dl>
+    <div class="section-heading"><h3>Submitted patch</h3><a class="source" href={rawBundleHref(publication, "submitted.patch")}>Raw patch</a></div><pre>{run.patch}</pre>
+  </section>
+
+  <section class="section" aria-labelledby="checks-heading"><h2 id="checks-heading">Visible and released Hidden Checks</h2>
+    <div class="grid">
+      <div><div class="section-heading"><h3>Visible Checks</h3><a class="source" href={rawBundleHref(publication, "visible-results.json")}>visible-results.json</a></div><ul class="list">{run.visibleResults.map((result) => <li id={anchorId("visible", result.checkId)}><p><span class:list={["status", `status--${result.outcome}`]}>{result.outcome}</span> · {result.checkId} · {result.severity}</p><p>Covers {result.covers.join(", ")}</p><ul class="evidence-links">{renderResultSource(result).map((source) => <li><a href={source.href}>{source.eventId}</a></li>)}{result.reproductionArtifact !== null && <li><a href={rawBundleHref(publication, result.reproductionArtifact.path)}>reproduction artifact</a></li>}</ul></li>)}</ul></div>
+      <div><div class="section-heading"><h3>Released Hidden Checks</h3><a class="source" href={rawBundleHref(publication, "hidden-results.json")}>hidden-results.json</a></div><ul class="list">{run.hiddenResults.map((result) => <li id={anchorId("hidden", result.checkId)}><p><span class:list={["status", `status--${result.outcome}`]}>{result.outcome}</span> · {result.checkId} · {result.severity}</p><p>Covers {result.covers.join(", ")}</p><ul class="evidence-links">{renderResultSource(result).map((source) => <li><a href={source.href}>{source.eventId}</a></li>)}{result.reproductionArtifact !== null && <li><a href={rawBundleHref(publication, result.reproductionArtifact.path)}>reproduction artifact</a></li>}</ul></li>)}</ul></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="trajectory-heading"><div class="section-heading"><h2 id="trajectory-heading">Trajectory</h2><a class="source" href={rawBundleHref(publication, "trajectory.jsonl")}>trajectory.jsonl</a></div>
+    <ol class="timeline">{run.trajectory.map((event) => <li id={anchorId("event", event.eventId)}><h3>{event.sequence}. {event.eventType}</h3><p>{event.timestamp} · {event.source.kind}/{event.source.name}</p><p class="source">{event.eventId} · sanitization: {event.sanitization}</p>{event.artifactReference !== undefined && <p><a href={rawBundleHref(publication, event.artifactReference.path)}>{event.artifactReference.artifactId}</a></p>}</li>)}</ol>
+  </section>
+
+  <section class="section" aria-labelledby="interventions-heading"><div class="section-heading"><h2 id="interventions-heading">Interventions</h2><a class="source" href={rawBundleHref(publication, "interventions.jsonl")}>interventions.jsonl</a></div>
+    <ul class="list">{run.interventions.map((intervention) => <li><h3>{intervention.category}</h3><p>{intervention.text}</p><p><a href={`#${anchorId("event", intervention.eventId)}`}>{intervention.eventId}</a> · <a href={rawBundleHref(publication, "interventions.jsonl")}>{intervention.humanActiveSeconds}s human active</a></p></li>)}</ul>
+  </section>
+
+  <section class="section" aria-labelledby="costs-heading"><div class="section-heading"><h2 id="costs-heading">Costs and environment</h2><a class="source" href={rawBundleHref(publication, "costs.json")}>costs.json</a></div>
+    <dl class="meta"><div><dt>Wall clock</dt><dd><a href={rawBundleHref(publication, "costs.json")}>{run.costs.wallClockSeconds}s</a></dd></div>{Object.entries(run.costs.humanActiveSecondsByRole).map(([role, seconds]) => <div><dt>{role} active</dt><dd><a href={rawBundleHref(publication, "costs.json")}>{seconds}s</a></dd></div>)}{run.costs.usage.map((usage) => <div><dt>Token usage · {usage.source.name}</dt><dd><a href={rawBundleHref(publication, "costs.json")}>{usage.totalTokens ?? "Unavailable"} ({usage.measurement})</a></dd></div>)}{run.costs.modelCosts.map((cost) => <div><dt>Model cost · {cost.source.name}</dt><dd><a href={rawBundleHref(publication, "costs.json")}>{cost.amount === null ? "Unavailable" : `${cost.amount} ${cost.currency}`} ({cost.measurement})</a></dd></div>)}</dl>
+    <div class="panel"><h3>Environment</h3><p><a href={rawBundleHref(publication, "environment.json")}>{run.environment.runtimeImage} · {run.environment.platform}</a></p><ul>{run.environment.dependencies.map((dependency) => <li>{dependency.name} {dependency.version ?? "version unavailable"}</li>)}</ul></div>
+  </section>
+
+  <section class="section" aria-labelledby="findings-heading"><div class="section-heading"><h2 id="findings-heading">Reviewer Findings</h2><a class="source" href={rawBundleHref(publication, "reviewer-findings.json")}>reviewer-findings.json</a></div>
+    <ul class="list">{run.reviewerFindings.map((finding) => <li id={anchorId("finding", finding.findingId)}><h3>{finding.statement}</h3><p><span class:list={["status", `status--${finding.status}`]}>{finding.status}</span> · {finding.severity}</p><ul class="evidence-links">{finding.sourceEventIds.map((eventId) => <li><a href={`#${anchorId("event", eventId)}`}>{eventId}</a></li>)}{finding.artifactReferences.map((artifact) => <li><a href={rawBundleHref(publication, artifact.path)}>{artifact.artifactId}</a></li>)}</ul></li>)}</ul>
+  </section>
+
+  <section class="section" aria-labelledby="revision-heading"><div class="section-heading"><h2 id="revision-heading">Bundle Revision history</h2><a class="source" href={rawBundleHref(publication, "checksums.json")}>checksums.json</a></div>
+    <ol class="timeline">{run.revision !== null && <li><h3>{run.revision.supersededRevisionId}</h3><p>Superseded immutable content set</p><p class="hash">{run.revision.supersededContentSetSha256}</p></li>}{revisions.map((revision) => <li><h3>{revision.verification.revisionId}</h3><p>Approved {revision.approval.approvedAt}</p><p class="hash">{revision.verification.contentSetSha256}</p>{revision.run.revision !== null && <p>{revision.run.revision.reason} Changed: {revision.run.revision.changedArtifacts.join(", ")}.</p>}</li>)}</ol>
+    {publication.approval.immutableReleaseAssetUrl !== null && <p><a href={publication.approval.immutableReleaseAssetUrl}>Download immutable GitHub Release asset</a></p>}
+  </section>
+
+  <section class="section" aria-labelledby="checksums-heading"><div class="section-heading"><h2 id="checksums-heading">Checksums and raw bundle</h2><a class="source" href={rawBundleHref(publication, "checksums.json")}>Raw checksum manifest</a></div>
+    <div class="table-wrap"><table><thead><tr><th>File</th><th>Kind</th><th>SHA-256</th></tr></thead><tbody>{run.checksums.entries.map((entry) => <tr><td><a href={rawBundleHref(publication, entry.path)}>{entry.path}</a></td><td>{entry.kind}</td><td class="hash">{entry.sha256}</td></tr>)}</tbody></table></div>
+  </section>
+</BaseLayout>

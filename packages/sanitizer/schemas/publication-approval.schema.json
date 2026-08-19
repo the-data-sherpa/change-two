@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/publication-approval/v1",
+  "title": "Publication Approval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "approvalId", "reportId", "sanitizedContentSetSha256", "decision", "evidenceClass", "approvedAt", "approver", "statement"],
+  "properties": {
+    "schemaType": { "const": "publication-approval" },
+    "schemaVersion": { "const": "sanitization/v1" },
+    "approvalId": { "type": "string", "minLength": 1 },
+    "reportId": { "type": "string", "minLength": 1 },
+    "sanitizedContentSetSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "decision": { "const": "approved" },
+    "evidenceClass": { "enum": ["practice", "measured"] },
+    "immutableReleaseAssetUrl": { "type": ["string", "null"], "format": "uri", "pattern": "^https://" },
+    "approvedAt": { "type": "string", "format": "date-time" },
+    "approver": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "identifier"],
+      "properties": { "kind": { "const": "human" }, "identifier": { "type": "string", "minLength": 1 } }
+    },
+    "statement": { "type": "string", "minLength": 1 }
+  }
+}

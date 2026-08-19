@@ -1,0 +1,1 @@
+{"findings":[{"artifactReferences":[],"findingId":"finding:review-1","severity":"informational","sourceEventIds":["event:message"],"statement":"The fixture retains source attribution.","status":"confirmed"}],"schemaType":"reviewer-findings","schemaVersion":"evidence/v1"}

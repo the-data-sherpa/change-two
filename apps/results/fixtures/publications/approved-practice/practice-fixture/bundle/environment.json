@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"fixture-dependency","version":null}],"platform":"linux/amd64","runtimeImage":"node:fixture@sha256:0000","schemaType":"environment","schemaVersion":"evidence/v1","source":"event:environment"}

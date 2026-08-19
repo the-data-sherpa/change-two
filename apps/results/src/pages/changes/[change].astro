@@ -1,0 +1,28 @@
+---
+import EvidenceBadge from "../../components/EvidenceBadge.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { latestByRun, loadPublications, rawBundleHref, routeSegment, runHref, type Publication } from "../../lib/publications.js";
+
+export function getStaticPaths() {
+  const groups = Map.groupBy(latestByRun(loadPublications()), (publication) => publication.run.manifest.changeId);
+  return [...groups.entries()].map(([changeId, publications]) => ({ params: { change: routeSegment(changeId) }, props: { changeId, publications } }));
+}
+interface Props { readonly changeId: string; readonly publications: readonly Publication[]; }
+const { changeId, publications } = Astro.props;
+---
+<BaseLayout description={`Equivalent Run comparison for ${changeId}.`} title={`${changeId} comparison`}>
+  <nav aria-label="Breadcrumb" class="breadcrumbs"><ol><li><a href="/">Seasons</a></li><li aria-current="page">{changeId}</li></ol></nav>
+  <header class="page-heading"><p class="eyebrow">Change comparison</p><h1>{changeId}</h1><p class="lede">Equivalent released Runs compared from normalized Evidence Bundles. Every measure links to its source file.</p></header>
+  <section class="section" aria-labelledby="comparison-heading"><h2 id="comparison-heading">Run evidence</h2>
+    <div class="table-wrap"><table><thead><tr><th>Run</th><th>Lineage</th><th>Outcome</th><th>Visible Checks</th><th>Hidden Checks</th><th>Wall clock</th></tr></thead><tbody>
+      {publications.map((publication) => <tr>
+        <td><EvidenceBadge evidenceClass={publication.approval.evidenceClass} /><br /><a href={runHref(publication)}>{publication.run.manifest.runId}</a></td>
+        <td><a href={`/lineages/${routeSegment(publication.run.manifest.lineageId)}/`}>{publication.run.manifest.lineageId}</a></td>
+        <td><a class:list={["status", `status--${publication.run.summary.status}`]} href={rawBundleHref(publication, "summary.json")}>{publication.run.summary.status}</a></td>
+        <td><a href={rawBundleHref(publication, "visible-results.json")}>{publication.run.visibleResults.filter((result) => result.outcome === "pass").length}/{publication.run.visibleResults.length} pass</a></td>
+        <td><a href={rawBundleHref(publication, "hidden-results.json")}>{publication.run.hiddenResults.filter((result) => result.outcome === "pass").length}/{publication.run.hiddenResults.length} pass</a></td>
+        <td><a href={rawBundleHref(publication, "costs.json")}>{publication.run.costs.wallClockSeconds}s</a></td>
+      </tr>)}
+    </tbody></table></div>
+  </section>
+</BaseLayout>

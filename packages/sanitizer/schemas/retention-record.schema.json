@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/retention-record/v1",
+  "title": "Retention Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaType", "schemaVersion", "sourceContentSetSha256", "publicationApprovedAt", "destructionDueAt", "events"],
+  "properties": {
+    "schemaType": { "const": "retention-record" },
+    "schemaVersion": { "const": "sanitization/v1" },
+    "sourceContentSetSha256": { "$ref": "#/$defs/sha256" },
+    "publicationApprovedAt": { "type": ["string", "null"], "format": "date-time" },
+    "destructionDueAt": { "type": ["string", "null"], "format": "date-time" },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "actor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "identifier"],
+      "properties": { "kind": { "enum": ["human", "automation"] }, "identifier": { "type": "string", "minLength": 1 } }
+    },
+    "event": {
+      "type": "object", "additionalProperties": false,
+      "required": ["eventId", "eventType", "recordedAt", "actor", "reason"],
+      "properties": {
+        "eventId": { "type": "string", "minLength": 1 },
+        "eventType": { "enum": ["scheduled", "hold-placed", "hold-released", "destroyed"] },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "actor": { "$ref": "#/$defs/actor" },
+        "reason": { "type": "string", "minLength": 1 },
+        "incidentReference": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        { "if": { "properties": { "eventType": { "const": "hold-placed" } } }, "then": { "required": ["incidentReference"], "properties": { "incidentReference": { "type": "string", "minLength": 1 }, "actor": { "type": "object", "properties": { "kind": { "const": "human" } } } } } },
+        { "if": { "properties": { "eventType": { "const": "hold-released" } } }, "then": { "properties": { "actor": { "type": "object", "properties": { "kind": { "const": "human" } } } } } }
+      ]
+    }
+  }
+}

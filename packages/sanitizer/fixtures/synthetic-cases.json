@@ -1,0 +1,16 @@
+{
+  "schemaType": "synthetic-sanitizer-cases",
+  "notice": "All values are inert test data and are not credentials.",
+  "redactable": {
+    "apiKey": "api_key=ct_test_000000000000000000000000",
+    "authentication": "Authorization: Bearer fake.header.signature000000",
+    "privatePath": "/home/synthetic-user/change-two/output.txt",
+    "windowsPrivatePath": "C:\\Users\\synthetic-user\\change-two\\output.txt"
+  },
+  "blockers": {
+    "unrelatedHistory": "UNRELATED_SESSION_HISTORY synthetic prior conversation",
+    "unreleasedContent": "UNRELEASED_HIDDEN_CHECK synthetic future assertion"
+  },
+  "ambiguous": "AMBIGUOUS_SENSITIVE synthetic-value",
+  "clean": "Public synthetic evidence with no sensitive material."
+}

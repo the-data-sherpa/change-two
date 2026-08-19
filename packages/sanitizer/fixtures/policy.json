@@ -1,0 +1,7 @@
+{
+  "schemaType": "sanitization-policy",
+  "schemaVersion": "sanitization/v1",
+  "releaseId": "release:synthetic-practice",
+  "releasedChangeIds": ["change:0"],
+  "releasedHiddenCheckIds": ["released-check"]
+}

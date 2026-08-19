@@ -1,0 +1,29 @@
+---
+import EvidenceBadge from "../components/EvidenceBadge.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { latestByRun, loadPublications, routeSegment, runHref } from "../lib/publications.js";
+
+const runs = latestByRun(loadPublications());
+const seasons = Map.groupBy(runs, (publication) => publication.run.manifest.seasonId);
+---
+<BaseLayout description="Released Change Two Evidence Bundles by Season." title="Seasons">
+  <header class="page-heading">
+    <p class="eyebrow">Released evidence index</p>
+    <h1>Seasons</h1>
+    <p class="lede">Only approved publication envelopes whose Evidence Bundles pass schema, reference, artifact, and checksum verification appear here.</p>
+  </header>
+  <section class="section" aria-labelledby="season-list-heading">
+    <h2 id="season-list-heading">Available Seasons</h2>
+    <ul class="list">
+      {[...seasons.entries()].map(([seasonId, publications]) => (
+        <li>
+          <p class="eyebrow">{publications.length} released Run{publications.length === 1 ? "" : "s"}</p>
+          <h3><a href={`/seasons/${routeSegment(seasonId)}/`}>{seasonId}</a></h3>
+          <div class="evidence-links">
+            {publications.map((publication) => <a href={runHref(publication)}><EvidenceBadge evidenceClass={publication.approval.evidenceClass} /></a>)}
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

@@ -129,8 +129,13 @@ Administrative commands append explicit operator or reviewer timer intervals, co
 ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
 ./change-two runner execute <plan.json> <output-dir>
 ./change-two runner timer-start|timer-stop|timer-correct|intervene ...
+./change-two sanitizer scan <bundle-dir> <policy.json> <scan.json>
+./change-two sanitizer sanitize <bundle-dir> <publication-dir> <policy.json> <request.json>
+./change-two sanitizer approve <publication-dir> <approval.json>
+./change-two sanitizer retention <publication-dir> <source-bundle-dir> <event.json>
+./change-two site build [publication-dir]
 ./change-two check
-./change-two package starter-api|starter-web|protocol|evidence|runner build|typecheck|test
+./change-two package starter-api|starter-web|results|protocol|evidence|runner|sanitizer build|typecheck|test
 ./change-two verify runner|starter|starter-http|starter-browser|reproducible-build
 ```
 
@@ -176,6 +181,22 @@ Corrections require a new capture whose manifest declares the new revision ident
 ```
 
 The generated `revision.json` links the superseded and current content checksum sets and lists changed artifacts. The correction command verifies but never writes the previous bundle.
+
+## Sanitized publication
+
+`sanitizer scan` checks a verified Evidence Bundle for credentials, authentication material, private paths, unrelated session history, and unreleased Change or Hidden Check content. Any blocker or unclassified high-entropy value quarantines the bundle. `sanitizer sanitize` creates a new bundle and a checksum-linked transformation report; it never edits source evidence.
+
+Publication requires a separate human approval with an explicit `practice` or `measured` evidence class. The publication envelope contains exactly `bundle/`, `sanitization-report.json`, `publication-approval.json`, and `retention-record.json`. Restricted source evidence has a 30-day destruction deadline unless a documented human incident hold is active.
+
+## Static results
+
+Build the static evidence surface from approved publication envelopes:
+
+```bash
+./change-two site build path/to/publications
+```
+
+The input may be one envelope or a directory of envelopes. The build rejects invalid schemas, changed checksums, undeclared artifacts, dangling evidence links, rejected or mismatched approvals, and overdue retention without destruction or an active hold. The output under `apps/results/dist` includes Season, Lineage, Change, and Run routes plus immutable revision-keyed raw bundle routes. Practice evidence is marked `PRACTICE EVIDENCE — NOT MEASURED` throughout.
 
 ## Architecture
 
