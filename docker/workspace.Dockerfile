@@ -13,6 +13,7 @@ COPY apps/starter-api/package.json apps/starter-api/package.json
 COPY apps/starter-web/package.json apps/starter-web/package.json
 COPY packages/protocol/package.json packages/protocol/package.json
 COPY packages/evidence/package.json packages/evidence/package.json
+COPY packages/runner/package.json packages/runner/package.json
 RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS source

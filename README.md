@@ -103,6 +103,19 @@ Run the Playwright identity-selection and Organization visibility flow with:
 
 The test login surface is enabled only by the local starter environment. It sets an opaque, HTTP-only cookie backed by a server-side session. Organization access is derived from that authenticated User on every request; client-supplied identity or membership fields provide no authority.
 
+## Isolated runner
+
+The runner prepares an exact detached Git commit in a disposable workspace, mounts only the declared Change as read-only input, and executes the selected harness in a resource-limited container. Claude Code and Codex use one harness interface; provider-native JSON remains attached to normalized Capture Events. The runner applies one total wall-clock Budget across execution and recovery, runs only declared Visible Checks, and finalizes the current patch without repair.
+
+Run a versioned Run Plan and keep the resulting `capture.jsonl`, `submitted.patch`, `result.json`, and `run.json`:
+
+```bash
+./change-two runner execute path/to/run-plan.json runs/private/run-id
+./change-two verify runner
+```
+
+Administrative commands append explicit operator or reviewer timer intervals, corrections, and policy-checked Interventions. `manual-budget-stop` records the Intervention before it stops the active harness container. Host environment variables reach the agent only when the Run Plan names them in `credentialEnvironment`.
+
 ## Repository commands
 
 ```text
@@ -114,12 +127,14 @@ The test login surface is enabled only by the local starter environment. It sets
 ./change-two evidence replay <capture.jsonl> <bundle-dir>
 ./change-two evidence verify <bundle-dir>
 ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
+./change-two runner execute <plan.json> <output-dir>
+./change-two runner timer-start|timer-stop|timer-correct|intervene ...
 ./change-two check
-./change-two package starter-api|starter-web|protocol|evidence build|typecheck|test
-./change-two verify starter|starter-http|starter-browser|reproducible-build
+./change-two package starter-api|starter-web|protocol|evidence|runner build|typecheck|test
+./change-two verify runner|starter|starter-http|starter-browser|reproducible-build
 ```
 
-`check` runs strict TypeScript checks, production builds, and database-independent tests in a clean container. `verify starter` exercises the running web, API, empty feature surface, and PostgreSQL. `verify starter-http` resets the observable PostgreSQL schemas, migrates, seeds repeatedly, checks session-backed tenant access, and proves the tenant baseline rejects a controlled membership defect. `verify starter-browser` runs the deterministic identity and Organization flow in Chromium. `verify reproducible-build` runs two uncached clean builds and compares their application artifacts.
+`check` runs strict TypeScript checks, production builds, and database-independent tests in a clean container. `verify runner` uses the pinned Node.js binary and real Docker daemon to exercise the repository CLI, workspace isolation, success, recovery, exhaustion, Adapter failure, hard wall-clock termination, manual Budget stop, policy validation, timers, corrections, provenance, and immutable Submission capture. `verify starter` exercises the running web, API, empty feature surface, and PostgreSQL. `verify starter-http` resets the observable PostgreSQL schemas, migrates, seeds repeatedly, checks session-backed tenant access, and proves the tenant baseline rejects a controlled membership defect. `verify starter-browser` runs the deterministic identity and Organization flow in Chromium. `verify reproducible-build` runs two uncached clean builds and compares their application artifacts.
 
 ## Protocol validation
 
