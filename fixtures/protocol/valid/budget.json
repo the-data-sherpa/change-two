@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "budget",
+  "budgetId": "budget:agent-v1",
+  "version": "1.0.0",
+  "limits": {
+    "wallClockSeconds": 5400,
+    "operatorActiveSeconds": 300,
+    "reviewerActiveSeconds": 0,
+    "recoveryAttempts": 3,
+    "modelSpend": {
+      "currency": "USD",
+      "maximum": 50,
+      "measurementMode": "estimated"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/outcome.schema.json",
+  "title": "Run Outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "runId",
+    "label",
+    "reason",
+    "confirmedSecurityDefects",
+    "unmetCriterionIds",
+    "regressionCheckIds"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "outcome"
+    },
+    "runId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "label": {
+      "enum": [
+        "clean-pass",
+        "recovered",
+        "degraded",
+        "blocked",
+        "invalid-run"
+      ]
+    },
+    "reason": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    },
+    "confirmedSecurityDefects": {
+      "type": "array",
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+      }
+    },
+    "unmetCriterionIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+      }
+    },
+    "regressionCheckIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+      }
+    }
+  }
+}

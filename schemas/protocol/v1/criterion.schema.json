@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/criterion.schema.json",
+  "title": "Criterion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "criterionId",
+    "changeId",
+    "statement",
+    "category",
+    "severityBlocking"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "criterion"
+    },
+    "criterionId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "changeId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "statement": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    },
+    "category": {
+      "enum": [
+        "functional",
+        "security",
+        "regression",
+        "migration"
+      ]
+    },
+    "severityBlocking": {
+      "type": "boolean"
+    }
+  }
+}

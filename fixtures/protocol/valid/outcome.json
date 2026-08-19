@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "outcome",
+  "runId": "run:practice-c0",
+  "label": "clean-pass",
+  "reason": "All required checks passed within Budget.",
+  "confirmedSecurityDefects": [],
+  "unmetCriterionIds": [],
+  "regressionCheckIds": []
+}

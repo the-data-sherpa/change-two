@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/protocol-deviation.schema.json",
+  "title": "Protocol Deviation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "deviationId",
+    "runId",
+    "observedAt",
+    "description",
+    "materiality",
+    "reviewerDecision"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "protocol-deviation"
+    },
+    "deviationId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "runId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "observedAt": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/timestamp"
+    },
+    "description": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    },
+    "materiality": {
+      "enum": [
+        "immaterial",
+        "material"
+      ]
+    },
+    "reviewerDecision": {
+      "enum": [
+        "accepted",
+        "invalidate-run",
+        "restart-round"
+      ]
+    },
+    "affectedRunIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+      }
+    }
+  }
+}

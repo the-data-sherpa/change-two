@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/run-manifest.schema.json",
+  "title": "Run Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "runId",
+    "seasonId",
+    "roundId",
+    "lineageId",
+    "changeId",
+    "startingCommit",
+    "submittedCommit",
+    "status",
+    "startedAt",
+    "endedAt",
+    "actualHarness",
+    "policyRef",
+    "budgetRef",
+    "environment",
+    "deviations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "run-manifest"
+    },
+    "runId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "seasonId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "roundId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "lineageId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "changeId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "startingCommit": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/commit"
+    },
+    "submittedCommit": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/commit"
+    },
+    "status": {
+      "enum": [
+        "submitted",
+        "blocked",
+        "invalid"
+      ]
+    },
+    "startedAt": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/timestamp"
+    },
+    "endedAt": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/timestamp"
+    },
+    "actualHarness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "harnessId",
+        "version",
+        "model",
+        "systemInstructionsSha256",
+        "repositoryInstructionsSha256",
+        "tools",
+        "permissions"
+      ],
+      "properties": {
+        "harnessId": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+        },
+        "version": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        },
+        "model": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+        },
+        "systemInstructionsSha256": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+        },
+        "repositoryInstructionsSha256": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+        },
+        "tools": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          }
+        }
+      }
+    },
+    "policyRef": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/versionedReference"
+    },
+    "budgetRef": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/versionedReference"
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtimeImageDigest",
+        "lockfileSha256",
+        "networkPolicyVersion"
+      ],
+      "properties": {
+        "runtimeImageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "lockfileSha256": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+        },
+        "networkPolicyVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        }
+      }
+    },
+    "deviations": {
+      "type": "array",
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/protocol-deviation.schema.json"
+      }
+    }
+  }
+}

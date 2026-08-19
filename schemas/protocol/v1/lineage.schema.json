@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/lineage.schema.json",
+  "title": "Lineage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "lineageId",
+    "displayName",
+    "workflow",
+    "policyRef",
+    "budgetRef"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "lineage"
+    },
+    "lineageId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "displayName": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    },
+    "workflow": {
+      "enum": [
+        "agent",
+        "human-baseline"
+      ]
+    },
+    "policyRef": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/versionedReference"
+    },
+    "budgetRef": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/versionedReference"
+    }
+  }
+}

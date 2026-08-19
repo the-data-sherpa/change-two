@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/season-manifest.schema.json",
+  "title": "Season Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "seasonId",
+    "status",
+    "question",
+    "starter",
+    "sealedArtifacts",
+    "lineages",
+    "policies",
+    "budgets",
+    "harnesses",
+    "runtime",
+    "authentication",
+    "roles",
+    "executionOrder",
+    "networkPolicy",
+    "evaluation",
+    "publication",
+    "knownLimitations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "season-manifest"
+    },
+    "seasonId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "status": {
+      "const": "sealed"
+    },
+    "question": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    },
+    "starter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commit": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/commit"
+        }
+      }
+    },
+    "sealedArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/artifact"
+      }
+    },
+    "lineages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/lineage.schema.json"
+      }
+    },
+    "policies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/policy.schema.json"
+      }
+    },
+    "budgets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/budget.schema.json"
+      }
+    },
+    "harnesses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "harnessId",
+          "name",
+          "version",
+          "model",
+          "systemInstructionsSha256",
+          "repositoryInstructionsSha256",
+          "tools",
+          "permissions"
+        ],
+        "properties": {
+          "harnessId": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          },
+          "name": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          },
+          "version": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+          },
+          "model": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          },
+          "systemInstructionsSha256": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+          },
+          "repositoryInstructionsSha256": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+          },
+          "tools": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image",
+        "imageDigest",
+        "lockfileSha256",
+        "dependencyInventorySha256"
+      ],
+      "properties": {
+        "image": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "lockfileSha256": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+        },
+        "dependencyInventorySha256": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "serverEstablishesIdentity",
+        "clientIdentityFieldsTrusted"
+      ],
+      "properties": {
+        "method": {
+          "const": "deterministic-local-session"
+        },
+        "serverEstablishesIdentity": {
+          "const": true
+        },
+        "clientIdentityFieldsTrusted": {
+          "const": false
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "builderIds",
+        "operatorIds",
+        "independentReviewerId",
+        "blindedReviewerId"
+      ],
+      "properties": {
+        "builderIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          }
+        },
+        "operatorIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          }
+        },
+        "independentReviewerId": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+        },
+        "blindedReviewerId": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+        }
+      }
+    },
+    "executionOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "seed",
+        "lineageIds"
+      ],
+      "properties": {
+        "algorithm": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+        },
+        "seed": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+        },
+        "lineageIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          }
+        }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allowedEndpoints",
+        "coverageGaps"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        },
+        "allowedEndpoints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "coverageGaps": {
+          "type": "array",
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matrixId",
+        "outcomeRulesVersion",
+        "confidenceInstrumentVersion",
+        "blindedReviewRubricVersion"
+      ],
+      "properties": {
+        "matrixId": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+        },
+        "outcomeRulesVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        },
+        "confidenceInstrumentVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        },
+        "blindedReviewRubricVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "releaseBaseUrl",
+        "redactionPolicyVersion",
+        "retentionPolicyVersion",
+        "incidentHoldPolicyVersion"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "releaseBaseUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "redactionPolicyVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        },
+        "retentionPolicyVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        },
+        "incidentHoldPolicyVersion": {
+          "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+        }
+      }
+    },
+    "knownLimitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+      }
+    }
+  }
+}

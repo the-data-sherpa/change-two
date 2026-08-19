@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "criterion",
+  "criterionId": "Criterion Mutable Title",
+  "changeId": "change:c0",
+  "statement": "An Organization can receive a customer Conversation.",
+  "category": "functional",
+  "severityBlocking": false
+}

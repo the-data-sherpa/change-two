@@ -14,8 +14,10 @@ usage() {
 Usage:
   ./change-two bootstrap
   ./change-two starter up|down|status|logs
+  ./change-two protocol validate|validate-matrix <document.json>
+  ./change-two protocol check-fixtures
   ./change-two check
-  ./change-two package starter-api|starter-web build|typecheck
+  ./change-two package starter-api|starter-web|protocol build|typecheck|test
   ./change-two verify starter|reproducible-build
 USAGE
 }
@@ -91,7 +93,7 @@ package_diagnostic() {
   local script=${2:-}
 
   case "$workspace" in
-    starter-api|starter-web) ;;
+    protocol|starter-api|starter-web) ;;
     *)
       usage
       exit 2
@@ -99,7 +101,7 @@ package_diagnostic() {
   esac
 
   case "$script" in
-    build|typecheck) ;;
+    build|test|typecheck) ;;
     *)
       usage
       exit 2
@@ -107,6 +109,11 @@ package_diagnostic() {
   esac
 
   run_workspace --filter "@change-two/$workspace" run "$script"
+}
+
+protocol() {
+  require_docker
+  run_workspace --silent --filter "@change-two/protocol" exec tsx src/cli.ts "$@"
 }
 
 verify_starter() {
@@ -190,6 +197,10 @@ case "${1:-}" in
   package)
     shift
     package_diagnostic "$@"
+    ;;
+  protocol)
+    shift
+    protocol "$@"
     ;;
   verify)
     shift

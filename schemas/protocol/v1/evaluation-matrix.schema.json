@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/evaluation-matrix.schema.json",
+  "title": "Evaluation Matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "matrixId",
+    "seasonId",
+    "changeId",
+    "version",
+    "invariants",
+    "criteria",
+    "checks"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "evaluation-matrix"
+    },
+    "matrixId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "seasonId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "changeId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "version": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "invariantId",
+          "statement",
+          "severityBlocking"
+        ],
+        "properties": {
+          "invariantId": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          },
+          "statement": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          },
+          "severityBlocking": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/criterion.schema.json"
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/check.schema.json"
+      }
+    }
+  }
+}

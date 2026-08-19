@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/check.schema.json",
+  "title": "Evaluation Check",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "checkId",
+    "title",
+    "visibility",
+    "method",
+    "covers"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "check"
+    },
+    "checkId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "title": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    },
+    "visibility": {
+      "enum": [
+        "visible",
+        "hidden"
+      ]
+    },
+    "method": {
+      "enum": [
+        "behavioral",
+        "structural"
+      ]
+    },
+    "covers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterionIds",
+        "invariantIds"
+      ],
+      "properties": {
+        "criterionIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          }
+        },
+        "invariantIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          }
+        }
+      }
+    }
+  }
+}

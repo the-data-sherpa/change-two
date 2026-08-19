@@ -11,7 +11,8 @@
   "scripts": {
     "build": "pnpm --recursive --if-present run build",
     "typecheck": "pnpm --recursive --if-present run typecheck",
-    "check": "pnpm run typecheck && pnpm run build"
+    "test": "pnpm --recursive --if-present run test",
+    "check": "pnpm run typecheck && pnpm run build && pnpm run test"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

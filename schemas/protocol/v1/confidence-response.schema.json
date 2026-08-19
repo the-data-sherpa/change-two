@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/confidence-response.schema.json",
+  "title": "Confidence Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "instrumentVersion",
+    "runId",
+    "actorId",
+    "recordedAt",
+    "allCriteriaProbability",
+    "noRegressionProbability",
+    "noBlockingAuthorizationDefectProbability",
+    "expectedHiddenFailures",
+    "highestRiskAssumption"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "confidence-response"
+    },
+    "instrumentVersion": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+    },
+    "runId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "actorId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "recordedAt": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/timestamp"
+    },
+    "allCriteriaProbability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "noRegressionProbability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "noBlockingAuthorizationDefectProbability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "expectedHiddenFailures": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "highestRiskAssumption": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+    }
+  }
+}

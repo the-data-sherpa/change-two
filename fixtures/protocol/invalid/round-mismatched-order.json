@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "round",
+  "roundId": "round:c0",
+  "seasonId": "season:s0",
+  "changeId": "change:c0",
+  "lineageIds": [
+    "lineage:agent-a-minimal"
+  ],
+  "runOrder": [
+    "lineage:unknown"
+  ]
+}

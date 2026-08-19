@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "check",
+  "checkId": "check:c0-visible-01",
+  "title": "Receive and list Conversations",
+  "visibility": "visible",
+  "method": "behavioral",
+  "covers": {
+    "criterionIds": [
+      "criterion:c0-ac-01"
+    ],
+    "invariantIds": []
+  }
+}

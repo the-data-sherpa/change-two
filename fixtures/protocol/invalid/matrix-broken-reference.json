@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "evaluation-matrix",
+  "matrixId": "matrix:c0-v1",
+  "seasonId": "season:s0",
+  "changeId": "change:c0",
+  "version": "1.0.0",
+  "invariants": [
+    {
+      "invariantId": "invariant:organization-isolation",
+      "statement": "A User cannot read or mutate another Organization's data.",
+      "severityBlocking": true
+    }
+  ],
+  "criteria": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-01",
+      "changeId": "change:c0",
+      "statement": "An Organization can receive a customer Conversation.",
+      "category": "functional",
+      "severityBlocking": false
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-02",
+      "changeId": "change:c0",
+      "statement": "An Organization member can view Conversations in that Organization only.",
+      "category": "security",
+      "severityBlocking": true
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-03",
+      "changeId": "change:c0",
+      "statement": "An Organization member can open an authorized Conversation.",
+      "category": "functional",
+      "severityBlocking": false
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-04",
+      "changeId": "change:c0",
+      "statement": "An Organization member can reply to an authorized Conversation.",
+      "category": "functional",
+      "severityBlocking": false
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-05",
+      "changeId": "change:c0",
+      "statement": "An Organization member can mark an authorized Conversation resolved.",
+      "category": "functional",
+      "severityBlocking": false
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-06",
+      "changeId": "change:c0",
+      "statement": "Cross-Organization Conversation reads are denied.",
+      "category": "security",
+      "severityBlocking": true
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-07",
+      "changeId": "change:c0",
+      "statement": "Cross-Organization Conversation mutations are denied.",
+      "category": "security",
+      "severityBlocking": true
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-08",
+      "changeId": "change:c0",
+      "statement": "Messages have deterministic chronological ordering.",
+      "category": "functional",
+      "severityBlocking": false
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "criterion",
+      "criterionId": "criterion:c0-ac-09",
+      "changeId": "change:c0",
+      "statement": "Invalid reply content is rejected without creating a Message.",
+      "category": "functional",
+      "severityBlocking": false
+    }
+  ],
+  "checks": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "check",
+      "checkId": "check:c0-visible-01",
+      "title": "Receive and list Conversations",
+      "visibility": "visible",
+      "method": "behavioral",
+      "covers": {
+        "criterionIds": [
+          "criterion:c0-ac-01",
+          "criterion:c0-ac-02",
+          "criterion:c0-ac-99"
+        ],
+        "invariantIds": []
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "check",
+      "checkId": "check:c0-visible-02",
+      "title": "Open, reply to, and resolve a Conversation",
+      "visibility": "visible",
+      "method": "behavioral",
+      "covers": {
+        "criterionIds": [
+          "criterion:c0-ac-03",
+          "criterion:c0-ac-04",
+          "criterion:c0-ac-05"
+        ],
+        "invariantIds": []
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "check",
+      "checkId": "check:c0-visible-03",
+      "title": "Order Messages and reject invalid replies",
+      "visibility": "visible",
+      "method": "behavioral",
+      "covers": {
+        "criterionIds": [
+          "criterion:c0-ac-08",
+          "criterion:c0-ac-09"
+        ],
+        "invariantIds": []
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "check",
+      "checkId": "check:c0-hidden-01",
+      "title": "Sealed Organization read authorization scenario",
+      "visibility": "hidden",
+      "method": "behavioral",
+      "covers": {
+        "criterionIds": [
+          "criterion:c0-ac-02",
+          "criterion:c0-ac-03",
+          "criterion:c0-ac-06"
+        ],
+        "invariantIds": [
+          "invariant:organization-isolation"
+        ]
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "check",
+      "checkId": "check:c0-hidden-02",
+      "title": "Sealed Organization mutation authorization scenario",
+      "visibility": "hidden",
+      "method": "behavioral",
+      "covers": {
+        "criterionIds": [
+          "criterion:c0-ac-04",
+          "criterion:c0-ac-05",
+          "criterion:c0-ac-07"
+        ],
+        "invariantIds": [
+          "invariant:organization-isolation"
+        ]
+      }
+    }
+  ]
+}

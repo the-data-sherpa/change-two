@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "change",
+  "changeId": "change:c0",
+  "sequence": 0,
+  "title": "Support inbox",
+  "releaseStatus": "released",
+  "requirementSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "criterionIds": [
+    "criterion:c0-ac-01"
+  ]
+}

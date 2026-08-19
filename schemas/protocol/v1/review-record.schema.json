@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/review-record.schema.json",
+  "title": "Review Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "reviewId",
+    "runIds",
+    "reviewerId",
+    "rubricVersion",
+    "blinded",
+    "recordedAt",
+    "findings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "review-record"
+    },
+    "reviewId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "runIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+      }
+    },
+    "reviewerId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "rubricVersion": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+    },
+    "blinded": {
+      "type": "boolean"
+    },
+    "recordedAt": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/timestamp"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "findingId",
+          "category",
+          "statement"
+        ],
+        "properties": {
+          "findingId": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+          },
+          "category": {
+            "enum": [
+              "comprehensibility",
+              "extension-risk",
+              "suspected-defect"
+            ]
+          },
+          "statement": {
+            "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/nonEmpty"
+          }
+        }
+      }
+    }
+  }
+}

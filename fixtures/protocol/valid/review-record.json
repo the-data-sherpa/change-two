@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "review-record",
+  "reviewId": "review:practice-01",
+  "runIds": [
+    "run:practice-c0"
+  ],
+  "reviewerId": "actor:reviewer-01",
+  "rubricVersion": "1.0.0",
+  "blinded": true,
+  "recordedAt": "2026-08-19T10:00:00Z",
+  "findings": [
+    {
+      "findingId": "finding:practice-01",
+      "category": "comprehensibility",
+      "statement": "The authorization flow is traceable from the HTTP route to the data query."
+    }
+  ]
+}

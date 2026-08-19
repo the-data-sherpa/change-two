@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "protocol-deviation",
+  "deviationId": "deviation:practice-01",
+  "runId": "run:practice-c0",
+  "observedAt": "2026-08-19T08:00:00Z",
+  "description": "Dependency registry access was briefly unavailable.",
+  "materiality": "immaterial",
+  "reviewerDecision": "accepted",
+  "affectedRunIds": [
+    "run:practice-c0"
+  ]
+}

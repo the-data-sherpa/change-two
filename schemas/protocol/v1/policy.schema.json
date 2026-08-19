@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://change-two.dev/schemas/protocol/v1/policy.schema.json",
+  "title": "Intervention Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaType",
+    "policyId",
+    "version",
+    "mode",
+    "allowedInterventions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "schemaType": {
+      "const": "policy"
+    },
+    "policyId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "version": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/version"
+    },
+    "mode": {
+      "enum": [
+        "minimal",
+        "active-review",
+        "human-baseline"
+      ]
+    },
+    "allowedInterventions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "unavailable-information",
+          "independent-infrastructure-failure",
+          "safety-stop",
+          "plan-challenge",
+          "missed-requirement",
+          "investigation-request",
+          "test-request",
+          "patch-rejection",
+          "explanation-request"
+        ]
+      }
+    }
+  }
+}

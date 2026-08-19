@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "lineage",
+  "lineageId": "lineage:agent-a-minimal",
+  "displayName": "Agent A minimal intervention",
+  "workflow": "agent",
+  "policyRef": {
+    "id": "policy:minimal-v1",
+    "version": "1.0.0"
+  },
+  "budgetRef": {
+    "id": "budget:agent-v1",
+    "version": "1.0.0"
+  }
+}

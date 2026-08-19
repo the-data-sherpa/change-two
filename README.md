@@ -55,7 +55,7 @@ The deterministic workspace and starter runtime are implemented. No measured Sea
 
 The initial build ends after one accepted, unmeasured Change 0 dry run. That dry run must exercise the runner, evaluator, evidence pipeline, sanitizer, and static results site in clean environments.
 
-The next work package is **WP2: Protocol schemas and evaluation matrix** in [`INITIAL-BUILD.md`](./INITIAL-BUILD.md).
+The next work package is **WP3: Starter client, API, and deterministic identity** in [`INITIAL-BUILD.md`](./INITIAL-BUILD.md).
 
 ## Local setup
 
@@ -85,12 +85,33 @@ Copy `.env.example` to `.env` only when you need different host ports. The examp
 ```text
 ./change-two bootstrap
 ./change-two starter up|down|status|logs
+./change-two protocol validate|validate-matrix <document.json>
+./change-two protocol check-fixtures
 ./change-two check
-./change-two package starter-api|starter-web build|typecheck
+./change-two package starter-api|starter-web|protocol build|typecheck|test
 ./change-two verify starter|reproducible-build
 ```
 
 `check` runs strict TypeScript checks and production builds in a clean container. `verify starter` exercises the running web, API, empty feature surface, and PostgreSQL. `verify reproducible-build` runs two uncached clean builds and compares their application artifacts.
+
+## Protocol validation
+
+Versioned JSON Schemas define Season, Round, Run, Lineage, Change, Policy, Budget, Criterion, Check, Outcome, Protocol Deviation, confidence, and review records.
+
+Validate all accepted and rejected fixtures:
+
+```bash
+./change-two protocol check-fixtures
+```
+
+Validate a protocol document or evaluation matrix:
+
+```bash
+./change-two protocol validate fixtures/protocol/valid/season-manifest.json
+./change-two protocol validate-matrix requirements/released/change-0/evaluation-matrix.json
+```
+
+Validation errors identify the failing JSON path and rule. The Change 0 matrix rejects missing coverage, broken references, duplicate identifiers, orphan Checks, and structural-only coverage for severity-blocking Criteria.
 
 ## Architecture
 
@@ -112,6 +133,7 @@ A separate private evaluator repository will hold future requirements, measured 
 - [`MVP.md`](./MVP.md) defines the product, protocol, scope, and success criteria.
 - [`INITIAL-BUILD.md`](./INITIAL-BUILD.md) defines the implementation boundary, architecture, work packages, and acceptance gates.
 - [`CONTEXT.md`](./CONTEXT.md) defines the canonical experiment language.
+- [`requirements/released/change-0/evaluation-matrix.json`](./requirements/released/change-0/evaluation-matrix.json) maps Change 0 Criteria and invariants to visible and sealed Hidden Checks.
 - [`docs/adr/0001-separate-private-evaluator.md`](./docs/adr/0001-separate-private-evaluator.md) records the repository secrecy boundary.
 - [`docs/adr/0002-append-only-evidence-provenance.md`](./docs/adr/0002-append-only-evidence-provenance.md) records the evidence provenance model.
 

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "confidence-response",
+  "instrumentVersion": "1.0.0",
+  "runId": "run:practice-c0",
+  "actorId": "actor:operator-01",
+  "recordedAt": "2026-08-19T09:00:00Z",
+  "allCriteriaProbability": 0.8,
+  "noRegressionProbability": 0.75,
+  "noBlockingAuthorizationDefectProbability": 0.7,
+  "expectedHiddenFailures": 1,
+  "highestRiskAssumption": "Organization filtering is applied at every server entry point."
+}

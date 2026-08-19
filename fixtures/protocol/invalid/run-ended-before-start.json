@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "run-manifest",
+  "runId": "run:practice-c0",
+  "seasonId": "season:s0",
+  "roundId": "round:c0",
+  "lineageId": "lineage:agent-a-minimal",
+  "changeId": "change:c0",
+  "startingCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "submittedCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "status": "submitted",
+  "startedAt": "2026-08-19T08:00:00Z",
+  "endedAt": "2026-08-19T07:00:00Z",
+  "actualHarness": {
+    "harnessId": "harness:claude-code",
+    "version": "1.0.0",
+    "model": "provider-model-snapshot",
+    "systemInstructionsSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "repositoryInstructionsSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "tools": [
+      "filesystem",
+      "terminal"
+    ],
+    "permissions": [
+      "workspace-read",
+      "workspace-write"
+    ]
+  },
+  "policyRef": {
+    "id": "policy:minimal-v1",
+    "version": "1.0.0"
+  },
+  "budgetRef": {
+    "id": "budget:agent-v1",
+    "version": "1.0.0"
+  },
+  "environment": {
+    "runtimeImageDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "lockfileSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "networkPolicyVersion": "1.0.0"
+  },
+  "deviations": []
+}

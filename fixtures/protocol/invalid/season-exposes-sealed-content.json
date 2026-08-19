@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "season-manifest",
+  "seasonId": "season:s0",
+  "status": "sealed",
+  "question": "How do minimal-intervention and actively reviewed Lineages differ across four Changes?",
+  "starter": {
+    "repository": "https://github.com/the-data-sherpa/change-two",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "sealedArtifacts": [
+    {
+      "artifactId": "artifact:change-1",
+      "kind": "requirement",
+      "mediaType": "text/markdown",
+      "releaseStatus": "sealed",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "content": "future requirement"
+    },
+    {
+      "artifactId": "artifact:hidden-evaluation",
+      "kind": "hidden-evaluation",
+      "mediaType": "application/gzip",
+      "releaseStatus": "sealed",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "lineages": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "lineage",
+      "lineageId": "lineage:agent-a-minimal",
+      "displayName": "Agent A minimal intervention",
+      "workflow": "agent",
+      "policyRef": {
+        "id": "policy:minimal-v1",
+        "version": "1.0.0"
+      },
+      "budgetRef": {
+        "id": "budget:agent-v1",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "policy",
+      "policyId": "policy:minimal-v1",
+      "version": "1.0.0",
+      "mode": "minimal",
+      "allowedInterventions": [
+        "unavailable-information",
+        "independent-infrastructure-failure",
+        "safety-stop"
+      ]
+    }
+  ],
+  "budgets": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "budget",
+      "budgetId": "budget:agent-v1",
+      "version": "1.0.0",
+      "limits": {
+        "wallClockSeconds": 5400,
+        "operatorActiveSeconds": 300,
+        "reviewerActiveSeconds": 0,
+        "recoveryAttempts": 3,
+        "modelSpend": {
+          "currency": "USD",
+          "maximum": 50,
+          "measurementMode": "estimated"
+        }
+      }
+    }
+  ],
+  "harnesses": [
+    {
+      "harnessId": "harness:claude-code",
+      "name": "Claude Code",
+      "version": "1.0.0",
+      "model": "provider-model-snapshot",
+      "systemInstructionsSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "repositoryInstructionsSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "tools": [
+        "filesystem",
+        "terminal"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write"
+      ]
+    }
+  ],
+  "runtime": {
+    "image": "node:24.19.0-bookworm-slim",
+    "imageDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "lockfileSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "dependencyInventorySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "authentication": {
+    "method": "deterministic-local-session",
+    "serverEstablishesIdentity": true,
+    "clientIdentityFieldsTrusted": false
+  },
+  "roles": {
+    "builderIds": [
+      "actor:builder-01"
+    ],
+    "operatorIds": [
+      "actor:operator-01"
+    ],
+    "independentReviewerId": "actor:reviewer-01",
+    "blindedReviewerId": "actor:reviewer-02"
+  },
+  "executionOrder": {
+    "algorithm": "balanced rotation",
+    "seed": "season-zero-order-seed",
+    "lineageIds": [
+      "lineage:agent-a-minimal"
+    ]
+  },
+  "networkPolicy": {
+    "version": "1.0.0",
+    "allowedEndpoints": [
+      "https://api.anthropic.com"
+    ],
+    "coverageGaps": [
+      "Registry mirrors can resolve to changing addresses."
+    ]
+  },
+  "evaluation": {
+    "matrixId": "matrix:c0-v1",
+    "outcomeRulesVersion": "1.0.0",
+    "confidenceInstrumentVersion": "1.0.0",
+    "blindedReviewRubricVersion": "1.0.0"
+  },
+  "publication": {
+    "repository": "https://github.com/the-data-sherpa/change-two",
+    "releaseBaseUrl": "https://github.com/the-data-sherpa/change-two/releases",
+    "redactionPolicyVersion": "1.0.0",
+    "retentionPolicyVersion": "1.0.0",
+    "incidentHoldPolicyVersion": "1.0.0"
+  },
+  "knownLimitations": [
+    "One Run per Lineage does not support statistical significance claims."
+  ]
+}
