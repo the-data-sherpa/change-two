@@ -62,3 +62,8 @@ Thumbs.db
 .claude/
 .codex/
 .opencode/
+semantic/
+procedural/
+episodic/
+preference/
+task/

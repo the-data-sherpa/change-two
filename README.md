@@ -51,15 +51,50 @@ Automated scanner alerts do not count as confirmed security defects without repr
 
 ## Current status
 
-The project is at the initial-build specification stage. No measured Season 0 Run has started.
+The deterministic workspace and starter runtime are implemented. No measured Season 0 Run has started.
 
 The initial build ends after one accepted, unmeasured Change 0 dry run. That dry run must exercise the runner, evaluator, evidence pipeline, sanitizer, and static results site in clean environments.
 
-Implementation starts with **WP1: Workspace and deterministic toolchain** in [`INITIAL-BUILD.md`](./INITIAL-BUILD.md). The first code change will establish the pinned Node.js and pnpm workspace, application shells, PostgreSQL runtime, and repository checks.
+The next work package is **WP2: Protocol schemas and evaluation matrix** in [`INITIAL-BUILD.md`](./INITIAL-BUILD.md).
 
-## Planned architecture
+## Local setup
 
-The public repository will use:
+The repository pins Node.js, pnpm, and runtime container images. The repository commands require Docker, Bash, and standard POSIX utilities.
+
+```bash
+./change-two bootstrap
+./change-two starter up
+```
+
+The starter is available at:
+
+- Web: `http://localhost:4173`
+- API health: `http://localhost:4300/health`
+- PostgreSQL: `localhost:55432`
+
+Stop the runtime with:
+
+```bash
+./change-two starter down
+```
+
+Copy `.env.example` to `.env` only when you need different host ports. The example contains no credentials.
+
+## Repository commands
+
+```text
+./change-two bootstrap
+./change-two starter up|down|status|logs
+./change-two check
+./change-two package starter-api|starter-web build|typecheck
+./change-two verify starter|reproducible-build
+```
+
+`check` runs strict TypeScript checks and production builds in a clean container. `verify starter` exercises the running web, API, empty feature surface, and PostgreSQL. `verify reproducible-build` runs two uncached clean builds and compares their application artifacts.
+
+## Architecture
+
+The public repository uses or will add:
 
 - Node.js LTS and pnpm workspaces
 - React and Vite for the starter client
@@ -101,7 +136,7 @@ The protocol must remain stable once measured execution starts. Before that poin
 
 Implementation changes must satisfy the work-package acceptance criteria in `INITIAL-BUILD.md`. Hidden checks must test observable behavior and security invariants, not preferred file names, symbols, or architecture.
 
-Contribution instructions will be added with the first executable workspace.
+Run `./change-two check` before submitting a change. Use the package diagnostic commands only to isolate failures. The repository commands remain the acceptance seam.
 
 ## License
 

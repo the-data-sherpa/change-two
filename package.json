@@ -1,0 +1,20 @@
+{
+  "name": "change-two",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Longitudinal coding-agent experiment workspace",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": "24.19.0",
+    "pnpm": "11.22.0"
+  },
+  "scripts": {
+    "build": "pnpm --recursive --if-present run build",
+    "typecheck": "pnpm --recursive --if-present run typecheck",
+    "check": "pnpm run typecheck && pnpm run build"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "7.0.2"
+  }
+}
