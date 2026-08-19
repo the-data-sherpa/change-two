@@ -1,0 +1,3 @@
+# Separate the private evaluator from the public monorepo
+
+Change Two will keep the starter applications, public schemas, runner, sanitizer, results site, released requirements, and released evidence in one public monorepo, while future requirements, measured hidden checks, defect fixtures, and evaluation orchestration remain in a separately controlled private repository. A single repository would simplify development but could expose sealed material through agent workspaces, history, mounts, container layers, or public artifacts; splitting every component further would add coordination cost without strengthening that secrecy boundary. The private evaluator therefore checks submitted public commits out into fresh disposable environments and never repairs them.

@@ -1,0 +1,3 @@
+# Preserve append-only evidence and materialize public bundles
+
+Change Two will use ordered append-only Capture Events and immutable referenced artifacts as the provenance layer, then generate the named Evidence Bundle files as versioned materialized views for evaluation and publication. Making bundle summaries the only source would lose source-level traceability, while forcing every consumer to rebuild all results from raw provider events would make the public site and third-party analysis brittle. Published bytes are never overwritten: a correction creates a new Bundle Revision that identifies and preserves the superseded checksums.

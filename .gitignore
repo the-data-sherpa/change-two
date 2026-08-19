@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+coverage/
+.next/
+.astro/
+.vercel/
+playwright-report/
+test-results/
+
+# TypeScript and tooling
+*.tsbuildinfo
+.eslintcache
+.vite/
+.turbo/
+.cache/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local databases and runtime state
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+postgres-data/
+.tmp/
+tmp/
+
+# Unreleased experiment material
+requirements/sealed/
+evidence/quarantine/
+evidence/restricted/
+runs/private/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local agent state
+.claude/
+.codex/
+.opencode/
