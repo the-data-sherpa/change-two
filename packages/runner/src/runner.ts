@@ -232,7 +232,7 @@ function createNetworkSession(plan: RunPlan): NetworkSession {
       "--network", "bridge", "--read-only", "--cap-drop", "ALL",
       "--security-opt", "no-new-privileges",
       "--env", `ALLOWED_HOSTS=${plan.container.network.allowedHosts.join(",")}`,
-      plan.container.image, "node", "/workspace/packages/runner/src/egress-proxy.mjs",
+      plan.container.image, "node", "/runtime/egress-proxy.mjs",
     ], undefined, "infrastructure");
     runChecked("docker", ["network", "connect", "--alias", "egress-proxy", name, proxyContainer], undefined, "infrastructure");
     return { name, proxyContainer };

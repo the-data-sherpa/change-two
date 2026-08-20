@@ -35,7 +35,7 @@ class ClaudeCodeAdapter extends JsonLineAdapter {
   createInvocation(plan: RunPlan, promptPath: string): HarnessInvocation {
     if (plan.harness.version !== CLAUDE_CODE_VERSION) throw new Error(`Claude Code runtime is pinned to ${CLAUDE_CODE_VERSION}.`);
     return {
-      command: ["/workspace/packages/runner/node_modules/.bin/claude", "-p", promptArgument(promptPath), "--output-format", "stream-json", "--verbose", "--model", plan.harness.model, "--dangerously-skip-permissions"],
+      command: ["/runtime/packages/runner/node_modules/.bin/claude", "-p", promptArgument(promptPath), "--output-format", "stream-json", "--verbose", "--model", plan.harness.model, "--dangerously-skip-permissions"],
       environment: {},
       sourceName: `claude-code@${plan.harness.version}`,
     };
@@ -48,7 +48,7 @@ class CodexAdapter extends JsonLineAdapter {
   createInvocation(plan: RunPlan, promptPath: string): HarnessInvocation {
     if (plan.harness.version !== CODEX_VERSION) throw new Error(`Codex runtime is pinned to ${CODEX_VERSION}.`);
     return {
-      command: ["/workspace/packages/runner/node_modules/.bin/codex", "exec", "--json", "--model", plan.harness.model, "--dangerously-bypass-approvals-and-sandbox", promptArgument(promptPath)],
+      command: ["/runtime/packages/runner/node_modules/.bin/codex", "exec", "--json", "--model", plan.harness.model, "--dangerously-bypass-approvals-and-sandbox", promptArgument(promptPath)],
       environment: {},
       sourceName: `codex@${plan.harness.version}`,
     };

@@ -18,3 +18,4 @@ COPY packages/sanitizer/package.json packages/sanitizer/package.json
 RUN pnpm install --frozen-lockfile
 RUN test "$(node -p "require('/runtime/packages/runner/node_modules/@anthropic-ai/claude-code/package.json').version")" = "2.1.226"
 RUN test "$(node -p "require('/runtime/packages/runner/node_modules/@openai/codex/package.json').version")" = "0.147.0"
+COPY packages/runner/src/egress-proxy.mjs /runtime/egress-proxy.mjs

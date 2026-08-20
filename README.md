@@ -117,6 +117,7 @@ Run a versioned Run Plan and keep the resulting `capture.jsonl`, `submitted.patc
 For the unmeasured practice Run, place a dedicated Anthropic key in `~/.config/change-two/secrets/anthropic-api-key`. The file must be owned by the current User with mode `0600`. The command loads it without placing the key in shell history:
 
 ```bash
+./change-two practice build
 ./change-two practice execute protocol/practice/run-plan.json runs/private/practice-c0
 ```
 
@@ -145,6 +146,7 @@ Administrative commands append explicit operator or reviewer timer intervals, co
 ./change-two evidence verify <bundle-dir>
 ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
 ./change-two verification execute <workspace> <check-bundle-dir> <output.json>
+./change-two practice build
 ./change-two practice execute <plan.json> <output-dir>
 ./change-two runner execute <plan.json> <output-dir>
 ./change-two runner timer-start|timer-stop|timer-correct|intervene ...

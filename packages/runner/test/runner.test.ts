@@ -127,10 +127,10 @@ test("Claude Code and Codex adapters pin versions and retain unavailable usage",
   const base = plan(f, ["true"]);
   const claude = harnessAdapter("claude-code").createInvocation({ ...base, harness: { ...base.harness, kind: "claude-code", version: "2.1.226", model: "claude-sonnet" } }, "/run-input/CHANGE.md");
   const codex = harnessAdapter("codex").createInvocation({ ...base, harness: { ...base.harness, kind: "codex", version: "0.147.0", model: "gpt-5.4" } }, "/run-input/CHANGE.md");
-  assert.equal(claude.command[0], "/workspace/packages/runner/node_modules/.bin/claude");
+  assert.equal(claude.command[0], "/runtime/packages/runner/node_modules/.bin/claude");
   assert.throws(() => harnessAdapter("claude-code").createInvocation({ ...base, harness: { ...base.harness, kind: "claude-code", version: "latest", model: "claude-sonnet" } }, "/run-input/CHANGE.md"), /pinned/);
   assert.throws(() => harnessAdapter("codex").createInvocation({ ...base, harness: { ...base.harness, kind: "codex", version: "latest", model: "gpt-5.4" } }, "/run-input/CHANGE.md"), /pinned/);
-  assert.equal(codex.command[0], "/workspace/packages/runner/node_modules/.bin/codex");
+  assert.equal(codex.command[0], "/runtime/packages/runner/node_modules/.bin/codex");
   assert.equal(base.budget.modelSpend.measurementMode, "unavailable");
 });
 

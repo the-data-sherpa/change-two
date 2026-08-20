@@ -22,6 +22,7 @@ Usage:
   ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
   ./change-two verification execute <workspace> <check-bundle-dir> <output.json>
   ./change-two runner execute <plan.json> <output-dir>
+  ./change-two practice build
   ./change-two practice execute <plan.json> <output-dir>
   ./change-two runner timer-start|timer-stop|timer-correct|intervene ...
   ./change-two sanitizer scan <bundle-dir> <policy.json> <scan.json>
@@ -184,27 +185,44 @@ site() {
 
 practice() {
   require_docker
-  [[ "${1:-}" == "execute" && $# -eq 3 ]] || { usage; exit 2; }
+  case "${1:-}" in
+    build)
+      [[ $# -eq 1 ]] || { usage; exit 2; }
+      docker build \
+        --file docker/runner.Dockerfile \
+        --build-arg "NODE_IMAGE=$NODE_IMAGE" \
+        --build-arg "PNPM_VERSION=$PNPM_VERSION" \
+        --tag change-two-runner:practice \
+        .
+      docker image inspect change-two-runner:practice --format '{{.Id}}'
+      ;;
+    execute)
+      [[ $# -eq 3 ]] || { usage; exit 2; }
+      local secret_file=${CHANGE_TWO_ANTHROPIC_KEY_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/change-two/secrets/anthropic-api-key}
+      [[ -f "$secret_file" && -r "$secret_file" ]] || {
+        echo "Practice credential file is missing or unreadable: $secret_file" >&2
+        exit 1
+      }
+      [[ "$(stat -c '%u' "$secret_file")" == "$(id -u)" && "$(stat -c '%a' "$secret_file")" == "600" ]] || {
+        echo "Practice credential file must be owned by the current user with mode 0600: $secret_file" >&2
+        exit 1
+      }
 
-  local secret_file=${CHANGE_TWO_ANTHROPIC_KEY_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/change-two/secrets/anthropic-api-key}
-  [[ -f "$secret_file" && -r "$secret_file" ]] || {
-    echo "Practice credential file is missing or unreadable: $secret_file" >&2
-    exit 1
-  }
-  [[ "$(stat -c '%u' "$secret_file")" == "$(id -u)" && "$(stat -c '%a' "$secret_file")" == "600" ]] || {
-    echo "Practice credential file must be owned by the current user with mode 0600: $secret_file" >&2
-    exit 1
-  }
-
-  ANTHROPIC_API_KEY=$(<"$secret_file")
-  export ANTHROPIC_API_KEY
-  [[ "$ANTHROPIC_API_KEY" == sk-ant-* ]] || {
-    unset ANTHROPIC_API_KEY
-    echo "Practice credential does not have the expected Anthropic key prefix." >&2
-    exit 1
-  }
-  runner execute "$2" "$3"
-  unset ANTHROPIC_API_KEY
+      ANTHROPIC_API_KEY=$(<"$secret_file")
+      export ANTHROPIC_API_KEY
+      [[ "$ANTHROPIC_API_KEY" == sk-ant-* ]] || {
+        unset ANTHROPIC_API_KEY
+        echo "Practice credential does not have the expected Anthropic key prefix." >&2
+        exit 1
+      }
+      runner execute "$2" "$3"
+      unset ANTHROPIC_API_KEY
+      ;;
+    *)
+      usage
+      exit 2
+      ;;
+  esac
 }
 
 runner() {

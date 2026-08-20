@@ -49,6 +49,7 @@
         "kind": {
           "enum": [
             "requirement",
+            "visible-evaluation",
             "hidden-evaluation",
             "runtime-image",
             "instructions",
