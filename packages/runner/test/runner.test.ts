@@ -94,8 +94,9 @@ test("isolates inputs, normalizes provenance, and finalizes an immutable submiss
   assert.equal(result.terminationCause, "success");
   assert.equal(result.workingTreeDirty, true);
   assert.deepEqual(result.budgetMeasurements.modelSpend, { mode: "observed-after-run", amount: 0.42, currency: "USD" });
-  assert.match(readFileSync(join(output, "submitted.patch"), "utf8"), /result\.txt/);
-  assert.equal(readFileSync(join(output, "submitted.patch"), "utf8").includes("CHANGE.md"), false);
+  const submittedPatch = readFileSync(join(output, "submitted.patch"), "utf8");
+  assert.match(submittedPatch, /^diff --git a\/result\.txt b\/result\.txt/m);
+  assert.equal(submittedPatch.includes("CHANGE.md"), false);
   const events = readFileSync(join(output, "capture.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as { eventType: string; source: { name: string; providerFields: unknown } });
   assert.ok(events.some((event) => event.eventType === "provider-event" && event.source.name === "synthetic@1.0.0" && event.source.providerFields !== null));
   assert.throws(() => executeRun(plan(f, ["true"]), output), /Output already exists/);

@@ -105,7 +105,7 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
 
     const submittedCommit = git(workspace, ["rev-parse", "HEAD"]).trim();
     runChecked("git", ["-C", workspace, "add", "--intent-to-add", "."], undefined, "infrastructure");
-    const patch = git(workspace, ["diff", "--binary", "HEAD"]);
+    const patch = git(workspace, ["-c", "diff.mnemonicPrefix=false", "-c", "diff.noprefix=false", "diff", "--binary", "--no-ext-diff", "--no-textconv", "HEAD"]);
     const patchPath = join(output, "submitted.patch");
     writeFileSync(patchPath, patch);
     const dirty = patch.length > 0;
