@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -22,6 +22,8 @@ interface Fixture {
   readonly repository: string;
   readonly requirement: string;
   readonly commit: string;
+  readonly publicRoot: string;
+  readonly checkBundle: string;
 }
 
 function fixture(): Fixture {
@@ -36,7 +38,24 @@ function fixture(): Fixture {
   const requirement = join(root, "change.md");
   writeFileSync(requirement, "Create result.txt.\n");
   writeFileSync(join(root, "parent-secret"), "must not be mounted\n");
-  return { root, repository, requirement, commit: execFileSync("git", ["-C", repository, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() };
+  const publicRoot = join(root, "public");
+  const checkBundle = join(root, "checks");
+  mkdirSync(publicRoot);
+  mkdirSync(checkBundle);
+  writeFileSync(join(checkBundle, "bundle.json"), JSON.stringify({ schemaVersion: "verification-bundle/v1", entrypoint: "checks.mjs", checks: [{ checkId: "check:result", title: "Result" }] }));
+  const verifier = join(publicRoot, "change-two");
+  writeFileSync(verifier, `#!/usr/bin/env node
+const fs = require("node:fs");
+const [, , group, command, workspace, bundle, output] = process.argv;
+if (group !== "verification" || command !== "execute" || !fs.existsSync(bundle) || fs.existsSync(workspace + "/visible-checks.json")) process.exit(2);
+const applicationError = fs.existsSync(workspace + "/application-error");
+const passed = !applicationError && fs.existsSync(workspace + "/result.txt") && fs.readFileSync(workspace + "/result.txt", "utf8") === "implemented";
+const checks = [{ checkId: "check:result", status: applicationError ? "error" : passed ? "passed" : "failed", diagnostics: passed ? [] : [applicationError ? "submitted application did not start" : "expected implemented"], evidence: [{ kind: "fixture" }] }];
+fs.writeFileSync(output, JSON.stringify({ schemaVersion: "verification-report/v1", passed, error: applicationError ? { category: "application", diagnostic: "submitted application did not start" } : null, checks }));
+process.exit(applicationError ? 2 : passed ? 0 : 1);
+`);
+  chmodSync(verifier, 0o755);
+  return { root, repository, requirement, commit: execFileSync("git", ["-C", repository, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(), publicRoot, checkBundle };
 }
 
 function plan(f: Fixture, command: readonly string[], overrides: Partial<RunPlan> = {}): RunPlan {
@@ -46,11 +65,11 @@ function plan(f: Fixture, command: readonly string[], overrides: Partial<RunPlan
     sourceRepository: f.repository,
     startingCommit: f.commit,
     requirementPath: f.requirement,
-    visibleChecks: [{ checkId: "check:result", command: ["sh", "-c", "test \"$(cat result.txt)\" = implemented"] }],
+    visibleVerification: { publicRoot: f.publicRoot, checkBundlePath: f.checkBundle },
     harness: { kind: "synthetic", version: "1.0.0", model: "synthetic", tools: ["shell"], permissions: ["workspace-write"], syntheticCommand: command },
     policy: { mode: "minimal", allowedInterventions: ["safety-stop", "independent-infrastructure-failure"] },
     budget: { wallClockSeconds: 10, operatorActiveSeconds: 60, reviewerActiveSeconds: 60, recoveryAttempts: 0, modelSpend: { currency: "USD", maximum: 1, measurementMode: "unavailable" } },
-    container: { image: NODE_IMAGE, network: "none", cpus: 1, memory: "256m", environment: {}, credentialEnvironment: [] },
+    container: { image: NODE_IMAGE, network: { mode: "none" }, cpus: 1, memory: "256m", environment: {}, credentialEnvironment: [] },
     ...overrides,
   };
 }
@@ -59,12 +78,13 @@ test("isolates inputs, normalizes provenance, and finalizes an immutable submiss
   const f = fixture();
   process.env.UNDECLARED_SECRET = "not-forwarded";
   const output = join(f.root, "output");
-  const runPlan = plan(f, ["sh", "-c", "test -f /run-input/CHANGE.md && test ! -w /run-input && test ! -e /parent-secret && test -z \"${UNDECLARED_SECRET:-}\" && printf '{\"type\":\"message\"}\\n' && printf implemented > result.txt"]);
+  const runPlan = plan(f, ["sh", "-c", "test -f /run-input/CHANGE.md && test ! -w /run-input && test ! -e /run-input/visible-checks.json && test ! -e /parent-secret && test -z \"${UNDECLARED_SECRET:-}\" && printf '{\"type\":\"result\",\"total_cost_usd\":0.42}\\n' && printf implemented > result.txt"]);
   const planPath = join(f.root, "plan.json");
   writeFileSync(planPath, JSON.stringify(runPlan));
   const result = JSON.parse(execFileSync("./change-two", ["runner", "execute", planPath, output], { cwd: process.cwd(), encoding: "utf8" })) as RunResult;
   assert.equal(result.terminationCause, "success");
   assert.equal(result.workingTreeDirty, true);
+  assert.deepEqual(result.budgetMeasurements.modelSpend, { mode: "observed-after-run", amount: 0.42, currency: "USD" });
   assert.match(readFileSync(join(output, "submitted.patch"), "utf8"), /result\.txt/);
   assert.equal(readFileSync(join(output, "submitted.patch"), "utf8").includes("CHANGE.md"), false);
   const events = readFileSync(join(output, "capture.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as { eventType: string; source: { name: string; providerFields: unknown } });
@@ -76,13 +96,24 @@ test("returns visible failures for recovery and finalizes recovery exhaustion wi
   const f = fixture();
   const exhausted = executeRun(plan(f, ["sh", "-c", "printf broken > result.txt"]), join(f.root, "exhausted"));
   assert.equal(exhausted.terminationCause, "verification-exhausted");
+  assert.deepEqual(exhausted.budgetMeasurements.modelSpend, { mode: "unavailable", amount: null, currency: "USD" });
   assert.match(readFileSync(join(f.root, "exhausted", "submitted.patch"), "utf8"), /broken/);
+  assert.match(readFileSync(join(f.root, "exhausted", "capture.jsonl"), "utf8"), /expected implemented/);
 
   const recoveredPlan = plan(f, ["sh", "-c", "if test -f attempt; then printf implemented > result.txt; else touch attempt; printf broken > result.txt; fi"], { budget: { ...plan(f, ["true"]).budget, recoveryAttempts: 1 } });
   const recovered = executeRun(recoveredPlan, join(f.root, "recovered"));
   assert.equal(recovered.terminationCause, "success");
   assert.equal(recovered.recoveryAttemptsUsed, 1);
+  const applicationPlan = plan(
+    f,
+    ["sh", "-c", "if test -f attempt; then rm application-error; printf implemented > result.txt; else touch attempt application-error; fi"],
+    { budget: { ...plan(f, ["true"]).budget, recoveryAttempts: 1 } },
+  );
+  const applicationRecovered = executeRun(applicationPlan, join(f.root, "application-recovered"));
+  assert.equal(applicationRecovered.terminationCause, "success");
+  assert.equal(applicationRecovered.recoveryAttemptsUsed, 1);
 });
+
 
 test("distinguishes adapter failure and wall-clock budget termination", { skip: !HAS_INTEGRATION_TOOLS }, () => {
   const f = fixture();
@@ -92,12 +123,14 @@ test("distinguishes adapter failure and wall-clock budget termination", { skip: 
 });
 
 test("Claude Code and Codex adapters pin versions and retain unavailable usage", () => {
-  const f: Fixture = { root: "/tmp", repository: "/tmp/repository", requirement: "/tmp/change.md", commit: "a".repeat(40) };
+  const f: Fixture = { root: "/tmp", repository: "/tmp/repository", requirement: "/tmp/change.md", commit: "a".repeat(40), publicRoot: "/tmp/public", checkBundle: "/tmp/checks" };
   const base = plan(f, ["true"]);
   const claude = harnessAdapter("claude-code").createInvocation({ ...base, harness: { ...base.harness, kind: "claude-code", version: "2.1.226", model: "claude-sonnet" } }, "/run-input/CHANGE.md");
   const codex = harnessAdapter("codex").createInvocation({ ...base, harness: { ...base.harness, kind: "codex", version: "0.147.0", model: "gpt-5.4" } }, "/run-input/CHANGE.md");
-  assert.ok(claude.command.includes("@anthropic-ai/claude-code@2.1.226"));
-  assert.ok(codex.command.includes("@openai/codex@0.147.0"));
+  assert.equal(claude.command[0], "/workspace/packages/runner/node_modules/.bin/claude");
+  assert.throws(() => harnessAdapter("claude-code").createInvocation({ ...base, harness: { ...base.harness, kind: "claude-code", version: "latest", model: "claude-sonnet" } }, "/run-input/CHANGE.md"), /pinned/);
+  assert.throws(() => harnessAdapter("codex").createInvocation({ ...base, harness: { ...base.harness, kind: "codex", version: "latest", model: "gpt-5.4" } }, "/run-input/CHANGE.md"), /pinned/);
+  assert.equal(codex.command[0], "/workspace/packages/runner/node_modules/.bin/codex");
   assert.equal(base.budget.modelSpend.measurementMode, "unavailable");
 });
 
@@ -122,7 +155,7 @@ test("manual Budget stop records an Intervention and finalizes the current state
 });
 
 test("policy validation, timers, corrections, and manual stops remain append-only", () => {
-  const f: Fixture = { root: mkdtempSync(join(tmpdir(), "change-two-admin-")), repository: "/tmp/repository", requirement: "/tmp/change.md", commit: "a".repeat(40) };
+  const f: Fixture = { root: mkdtempSync(join(tmpdir(), "change-two-admin-")), repository: "/tmp/repository", requirement: "/tmp/change.md", commit: "a".repeat(40), publicRoot: "/tmp/public", checkBundle: "/tmp/checks" };
   const p = plan(f, ["true"]);
   const admin = join(f.root, "administration.jsonl");
   assert.throws(() => recordIntervention(admin, p, "operator:a", "test-request", "run tests", "needed"), RunnerError);

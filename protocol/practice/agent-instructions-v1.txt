@@ -1,0 +1,1 @@
+Read /run-input/CHANGE.md and implement it completely. Work only in /submission. When complete, report completion; the runner owns verification.

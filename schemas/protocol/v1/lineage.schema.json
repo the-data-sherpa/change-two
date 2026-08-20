@@ -10,6 +10,7 @@
     "lineageId",
     "displayName",
     "workflow",
+    "builderId",
     "policyRef",
     "budgetRef"
   ],
@@ -32,11 +33,46 @@
         "human-baseline"
       ]
     },
+    "builderId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
+    "harnessId": {
+      "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/id"
+    },
     "policyRef": {
       "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/versionedReference"
     },
     "budgetRef": {
       "$ref": "https://change-two.dev/schemas/protocol/v1/common.schema.json#/$defs/versionedReference"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "workflow": {
+            "const": "agent"
+          }
+        },
+        "required": [
+          "workflow"
+        ]
+      },
+      "then": {
+        "properties": {
+          "harnessId": {}
+        },
+        "required": [
+          "harnessId"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "harnessId"
+          ]
+        }
+      }
+    }
+  ]
 }

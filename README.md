@@ -105,7 +105,7 @@ The test login surface is enabled only by the local starter environment. It sets
 
 ## Isolated runner
 
-The runner prepares an exact detached Git commit in a disposable workspace, mounts only the declared Change as read-only input, and executes the selected harness in a resource-limited container. Claude Code and Codex use one harness interface; provider-native JSON remains attached to normalized Capture Events. The runner applies one total wall-clock Budget across execution and recovery, runs only declared Visible Checks, and finalizes the current patch without repair.
+The runner prepares an exact detached Git commit in a disposable workspace, mounts only the declared Change as read-only input, and executes the selected harness in a resource-limited container. Agent containers have no direct egress. A trusted proxy permits only the exact hosts in the Run Plan; all other proxy targets and direct connections fail. Claude Code and Codex use one harness interface and exact CLIs installed in the sealed runner image. Provider-native JSON remains attached to normalized Capture Events. The runner applies one total wall-clock Budget across execution and recovery, invokes one trusted Check bundle through the public verification seam, and finalizes the current patch without repair. Provider-reported monetary usage is recorded as `observed-after-run`; absent usage remains `unavailable` and is never estimated.
 
 Run a versioned Run Plan and keep the resulting `capture.jsonl`, `submitted.patch`, `result.json`, and `run.json`:
 
@@ -114,7 +114,24 @@ Run a versioned Run Plan and keep the resulting `capture.jsonl`, `submitted.patc
 ./change-two verify runner
 ```
 
-Administrative commands append explicit operator or reviewer timer intervals, corrections, and policy-checked Interventions. `manual-budget-stop` records the Intervention before it stops the active harness container. Host environment variables reach the agent only when the Run Plan names them in `credentialEnvironment`.
+For the unmeasured practice Run, place a dedicated Anthropic key in `~/.config/change-two/secrets/anthropic-api-key`. The file must be owned by the current User with mode `0600`. The command loads it without placing the key in shell history:
+
+```bash
+./change-two practice execute protocol/practice/run-plan.json runs/private/practice-c0
+```
+
+Use a provider workspace spend cap of USD 25. The runner still records provider-reported spend as observed data; it does not claim real-time monetary enforcement.
+
+
+Run a trusted bundle against a submitted workspace with:
+
+```bash
+./change-two verification execute <workspace> <check-bundle-dir> <output.json>
+```
+
+The verifier mounts submitted source read-only, copies it inside a pinned application runtime, and starts isolated PostgreSQL, API, and web services without trusting submitted Compose or Docker inputs. A separate trusted checker container receives the read-only Check bundle but not the submitted source. Submitted application processes never receive the Check bundle, host Docker socket, or provider credentials. The report uses `verification-report/v1`, preserves ordered per-Check diagnostics and evidence, and leaves the supplied workspace byte-equivalent. The Change 0 public bundle is `requirements/released/change-0/visible-checks`; it is a Run Plan input and is intentionally not part of root `check`.
+
+Administrative commands append explicit operator or reviewer timer intervals, corrections, and policy-checked Interventions. `manual-budget-stop` records the Intervention before it stops the active harness container. Host environment variables reach the agent only when the Run Plan names them in `credentialEnvironment`; Docker receives credential names rather than secret values in its command arguments.
 
 ## Repository commands
 
@@ -127,6 +144,8 @@ Administrative commands append explicit operator or reviewer timer intervals, co
 ./change-two evidence replay <capture.jsonl> <bundle-dir>
 ./change-two evidence verify <bundle-dir>
 ./change-two evidence correct <capture.jsonl> <previous-bundle-dir> <new-bundle-dir> <correction.json>
+./change-two verification execute <workspace> <check-bundle-dir> <output.json>
+./change-two practice execute <plan.json> <output-dir>
 ./change-two runner execute <plan.json> <output-dir>
 ./change-two runner timer-start|timer-stop|timer-correct|intervene ...
 ./change-two sanitizer scan <bundle-dir> <policy.json> <scan.json>
@@ -219,6 +238,8 @@ A separate private evaluator repository will hold future requirements, measured 
 - [`INITIAL-BUILD.md`](./INITIAL-BUILD.md) defines the implementation boundary, architecture, work packages, and acceptance gates.
 - [`CONTEXT.md`](./CONTEXT.md) defines the canonical experiment language.
 - [`requirements/released/change-0/evaluation-matrix.json`](./requirements/released/change-0/evaluation-matrix.json) maps Change 0 Criteria and invariants to visible and sealed Hidden Checks.
+- [`protocol/evaluation/`](./protocol/evaluation/) freezes the outcome rules, confidence instrument, and blinded review rubric.
+- [`protocol/publication/`](./protocol/publication/) freezes fail-closed redaction, 30-day restricted retention, and incident-hold rules.
 - [`docs/adr/0001-separate-private-evaluator.md`](./docs/adr/0001-separate-private-evaluator.md) records the repository secrecy boundary.
 - [`docs/adr/0002-append-only-evidence-provenance.md`](./docs/adr/0002-append-only-evidence-provenance.md) records the evidence provenance model.
 

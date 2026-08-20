@@ -1,7 +1,10 @@
 import type { HarnessAdapter, HarnessInvocation, RunPlan } from "./types.js";
 
+const CLAUDE_CODE_VERSION = "2.1.226";
+const CODEX_VERSION = "0.147.0";
+
 function promptArgument(promptPath: string): string {
-  return `Read ${promptPath} and implement it completely. Work only in /workspace. When complete, report completion; the runner owns verification.`;
+  return `Read ${promptPath} and implement it completely. Work only in /submission. When complete, report completion; the runner owns verification.`;
 }
 
 abstract class JsonLineAdapter implements HarnessAdapter {
@@ -30,8 +33,9 @@ class ClaudeCodeAdapter extends JsonLineAdapter {
   readonly kind = "claude-code" as const;
 
   createInvocation(plan: RunPlan, promptPath: string): HarnessInvocation {
+    if (plan.harness.version !== CLAUDE_CODE_VERSION) throw new Error(`Claude Code runtime is pinned to ${CLAUDE_CODE_VERSION}.`);
     return {
-      command: ["npx", "--yes", `@anthropic-ai/claude-code@${plan.harness.version}`, "-p", promptArgument(promptPath), "--output-format", "stream-json", "--verbose", "--model", plan.harness.model, "--dangerously-skip-permissions"],
+      command: ["/workspace/packages/runner/node_modules/.bin/claude", "-p", promptArgument(promptPath), "--output-format", "stream-json", "--verbose", "--model", plan.harness.model, "--dangerously-skip-permissions"],
       environment: {},
       sourceName: `claude-code@${plan.harness.version}`,
     };
@@ -42,8 +46,9 @@ class CodexAdapter extends JsonLineAdapter {
   readonly kind = "codex" as const;
 
   createInvocation(plan: RunPlan, promptPath: string): HarnessInvocation {
+    if (plan.harness.version !== CODEX_VERSION) throw new Error(`Codex runtime is pinned to ${CODEX_VERSION}.`);
     return {
-      command: ["npx", "--yes", `@openai/codex@${plan.harness.version}`, "exec", "--json", "--model", plan.harness.model, "--dangerously-bypass-approvals-and-sandbox", promptArgument(promptPath)],
+      command: ["/workspace/packages/runner/node_modules/.bin/codex", "exec", "--json", "--model", plan.harness.model, "--dangerously-bypass-approvals-and-sandbox", promptArgument(promptPath)],
       environment: {},
       sourceName: `codex@${plan.harness.version}`,
     };

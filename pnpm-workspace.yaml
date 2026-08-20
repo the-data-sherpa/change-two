@@ -3,6 +3,7 @@ packages:
   - packages/*
 
 allowBuilds:
+  '@anthropic-ai/claude-code': true
   esbuild: true
 
 minimumReleaseAgeExclude:

@@ -1,11 +1,10 @@
 {
   "schemaVersion": "1.0.0",
   "schemaType": "lineage",
-  "lineageId": "lineage:agent-a-minimal",
-  "displayName": "Agent A minimal intervention",
+  "lineageId": "lineage:agent-without-harness",
+  "displayName": "Agent without a declared harness",
   "workflow": "agent",
   "builderId": "actor:builder-01",
-  "harnessId": "harness:claude-code",
   "policyRef": {
     "id": "policy:minimal-v1",
     "version": "1.0.0"

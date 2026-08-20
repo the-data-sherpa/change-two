@@ -17,7 +17,10 @@ export interface RunPlan {
   readonly sourceRepository: string;
   readonly startingCommit: string;
   readonly requirementPath: string;
-  readonly visibleChecks: readonly { readonly checkId: string; readonly command: readonly string[] }[];
+  readonly visibleVerification: {
+    readonly publicRoot: string;
+    readonly checkBundlePath: string;
+  };
   readonly harness: {
     readonly kind: HarnessKind;
     readonly version: string;
@@ -40,12 +43,33 @@ export interface RunPlan {
   };
   readonly container: {
     readonly image: string;
-    readonly network: string;
+    readonly network:
+      | { readonly mode: "none" }
+      | { readonly mode: "controlled"; readonly allowedHosts: readonly string[] };
     readonly cpus: number;
     readonly memory: string;
     readonly environment: Readonly<Record<string, string>>;
     readonly credentialEnvironment: readonly string[];
   };
+}
+
+export type VerificationCheckStatus = "passed" | "failed" | "error";
+
+export interface VerificationCheckResult {
+  readonly checkId: string;
+  readonly status: VerificationCheckStatus;
+  readonly diagnostics: readonly string[];
+  readonly evidence: readonly unknown[];
+}
+
+export interface VerificationReport {
+  readonly schemaVersion: "verification-report/v1";
+  readonly passed: boolean;
+  readonly error: {
+    readonly category: "integrity" | "setup" | "bundle" | "application";
+    readonly diagnostic: string;
+  } | null;
+  readonly checks: readonly VerificationCheckResult[];
 }
 
 export interface HarnessInvocation {

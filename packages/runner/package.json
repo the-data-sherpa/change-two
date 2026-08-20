@@ -10,7 +10,10 @@
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@change-two/evidence": "workspace:*"
+    "@anthropic-ai/claude-code": "2.1.226",
+    "@change-two/evidence": "workspace:*",
+    "@openai/codex": "0.147.0",
+    "@playwright/test": "1.62.1"
   },
   "devDependencies": {
     "tsx": "4.23.12"

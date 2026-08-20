@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "verification-bundle/v1",
+  "entrypoint": "checks.mjs",
+  "checks": [
+    {
+      "checkId": "check:c0-visible-01",
+      "title": "Receive and list Conversations"
+    },
+    {
+      "checkId": "check:c0-visible-02",
+      "title": "Open, reply to, and resolve a Conversation"
+    },
+    {
+      "checkId": "check:c0-visible-03",
+      "title": "Order Messages and reject invalid replies"
+    }
+  ]
+}

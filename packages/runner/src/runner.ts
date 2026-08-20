@@ -1,13 +1,15 @@
-import { createHash } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import { harnessAdapter } from "./adapters.js";
+import { cleanupVerificationSession } from "./verification.js";
 import { activeSeconds, administrationRecords } from "./administration.js";
-import { RunnerError, type HarnessInvocation, type RunPlan, type RunResult, type TerminationCause } from "./types.js";
+import { RunnerError, type HarnessInvocation, type RunPlan, type RunResult, type TerminationCause, type VerificationReport } from "./types.js";
 
-interface CommandResult { readonly status: number | null; readonly signal: string | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }
+interface CommandResult { readonly status: number | null; readonly signal: string | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean; readonly reportedCostUsd: number | null }
+interface NetworkSession { readonly name: string; readonly proxyContainer: string | null }
 
 export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
   validatePlan(plan);
@@ -24,6 +26,8 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
   let recoveryAttemptsUsed = 0;
   let operatorActiveSeconds = 0;
   let reviewerActiveSeconds = 0;
+  let reportedModelSpend: number | null = null;
+  let networkSession: NetworkSession | null = null;
 
   const capture = (eventType: string, source: string, payload: unknown, providerFields: Readonly<Record<string, unknown>> | null = null): void => {
     sequence += 1;
@@ -54,11 +58,12 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
     const requirementSource = resolve(plan.requirementPath);
     if (!existsSync(requirementSource)) throw new RunnerError("input", `Requirement does not exist: ${requirementSource}`);
     copyFileSync(requirementSource, join(inputDirectory, "CHANGE.md"));
-    writeFileSync(join(inputDirectory, "visible-checks.json"), `${JSON.stringify(plan.visibleChecks, null, 2)}\n`);
     chmodSync(inputDirectory, 0o555);
     capture("run-started", "runner", { startingCommit: actualStart, harness: plan.harness, budget: plan.budget });
+    networkSession = createNetworkSession(plan);
 
-    let harnessResult = invokeHarness(plan, workspace, adapter.createInvocation(plan, "/run-input/CHANGE.md"), capture, remainingMilliseconds(started, plan.budget.wallClockSeconds));
+    let harnessResult = invokeHarness(plan, workspace, adapter.createInvocation(plan, "/run-input/CHANGE.md"), capture, remainingMilliseconds(started, plan.budget.wallClockSeconds), networkSession.name);
+    reportedModelSpend = addReportedSpend(reportedModelSpend, harnessResult.reportedCostUsd);
     if (plan.administrationPath !== undefined) {
       for (const record of administrationRecords(resolve(plan.administrationPath))) capture(record.recordType, "runner", record);
     }
@@ -71,6 +76,10 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
     } else {
       while (true) {
         const verification = runVisibleChecks(plan, workspace, capture, started);
+        if (verification.timedOut) {
+          termination = "wall-clock-budget";
+          break;
+        }
         if (verification.passed) {
           termination = "success";
           break;
@@ -85,7 +94,8 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
         chmodSync(inputDirectory, 0o755);
         writeFileSync(promptFile, `Visible verification failed. Fix only the submitted implementation.\n\n${verification.failures.join("\n\n")}\n`);
         chmodSync(inputDirectory, 0o555);
-        harnessResult = invokeHarness(plan, workspace, adapter.createInvocation(plan, `/run-input/RECOVERY-${recoveryAttemptsUsed}.md`), capture, remainingMilliseconds(started, plan.budget.wallClockSeconds));
+        harnessResult = invokeHarness(plan, workspace, adapter.createInvocation(plan, `/run-input/RECOVERY-${recoveryAttemptsUsed}.md`), capture, remainingMilliseconds(started, plan.budget.wallClockSeconds), networkSession.name);
+        reportedModelSpend = addReportedSpend(reportedModelSpend, harnessResult.reportedCostUsd);
         if (hasManualStop(plan)) { termination = "manual-budget-stop"; break; }
         if (harnessResult.timedOut) { termination = "wall-clock-budget"; break; }
         if (harnessResult.status !== 0) { termination = "adapter-failure"; break; }
@@ -118,66 +128,140 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
         wallClock: { mode: "enforced", seconds: elapsedSeconds },
         operatorActive: { mode: "enforced", seconds: operatorActiveSeconds },
         reviewerActive: { mode: "enforced", seconds: reviewerActiveSeconds },
-        modelSpend: { mode: plan.budget.modelSpend.measurementMode, amount: null, currency: plan.budget.modelSpend.currency },
+        modelSpend: {
+          mode: reportedModelSpend === null ? "unavailable" : "observed-after-run",
+          amount: reportedModelSpend,
+          currency: reportedModelSpend === null ? plan.budget.modelSpend.currency : "USD",
+        },
       },
       submission: { patchPath: "submitted.patch", sha256 },
     };
+    capture("budget-measured", "runner", result.budgetMeasurements);
     writeFileSync(join(output, "result.json"), `${JSON.stringify(result, null, 2)}\n`);
     writeFileSync(join(output, "run.json"), `${JSON.stringify({ startedAt: startedAt.toISOString(), endedAt: new Date().toISOString(), plan }, null, 2)}\n`);
     return result;
   } finally {
+    if (networkSession !== null) cleanupNetworkSession(networkSession);
     rmSync(workspace, { force: true, recursive: true });
     const inputDirectory = join(output, ".input");
+    rmSync(join(output, ".verification"), { force: true, recursive: true });
     if (existsSync(inputDirectory)) chmodSync(inputDirectory, 0o755);
     rmSync(inputDirectory, { force: true, recursive: true });
   }
 }
 
-function invokeHarness(plan: RunPlan, workspace: string, invocation: HarnessInvocation, capture: (type: string, source: string, payload: unknown, fields?: Readonly<Record<string, unknown>> | null) => void, timeoutMilliseconds: number): CommandResult {
+function invokeHarness(plan: RunPlan, workspace: string, invocation: HarnessInvocation, capture: (type: string, source: string, payload: unknown, fields?: Readonly<Record<string, unknown>> | null) => void, timeoutMilliseconds: number, networkName: string): CommandResult {
   const name = `change-two-${plan.runId.replace(/[^a-zA-Z0-9_.-]/g, "-")}`;
   const environmentArguments: string[] = [];
   for (const [key, value] of Object.entries({ ...plan.container.environment, ...invocation.environment })) environmentArguments.push("--env", `${key}=${value}`);
   for (const key of plan.container.credentialEnvironment) {
-    const value = process.env[key];
-    if (value === undefined) throw new RunnerError("input", `Declared credential environment variable is unavailable: ${key}`);
-    environmentArguments.push("--env", `${key}=${value}`);
+    if (process.env[key] === undefined) throw new RunnerError("input", `Declared credential environment variable is unavailable: ${key}`);
+    environmentArguments.push("--env", key);
+  }
+  if (plan.container.network.mode === "controlled") {
+    environmentArguments.push(
+      "--env", "HTTP_PROXY=http://egress-proxy:3128",
+      "--env", "HTTPS_PROXY=http://egress-proxy:3128",
+      "--env", "ALL_PROXY=http://egress-proxy:3128",
+      "--env", "NO_PROXY=127.0.0.1,localhost",
+      "--env", "NODE_USE_ENV_PROXY=1",
+    );
   }
   const inputDirectory = join(resolve(workspace, ".."), ".input");
-  const arguments_ = ["run", "--rm", "--name", name, "--cpus", String(plan.container.cpus), "--memory", plan.container.memory, "--network", plan.container.network, "--volume", `${workspace}:/workspace`, "--volume", `${inputDirectory}:/run-input:ro`, "--workdir", "/workspace", ...environmentArguments, plan.container.image, ...invocation.command];
+  if (process.getuid === undefined || process.getgid === undefined) throw new RunnerError("infrastructure", "Runner requires a POSIX host user.");
+  const hostUser = `${process.getuid()}:${process.getgid()}`;
+  const arguments_ = ["run", "--rm", "--name", name, "--user", hostUser, "--cpus", String(plan.container.cpus), "--memory", plan.container.memory, "--network", networkName, "--volume", `${workspace}:/submission`, "--volume", `${inputDirectory}:/run-input:ro`, "--workdir", "/submission", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--env", "HOME=/tmp", ...environmentArguments, plan.container.image, ...invocation.command];
   capture("harness-started", "runner", { source: invocation.sourceName, command: invocation.command.slice(0, 3) });
   spawnSync("docker", ["rm", "--force", name], { encoding: "utf8" });
   const result = runCommand("docker", arguments_, timeoutMilliseconds);
+  let reportedCostUsd: number | null = null;
   for (const stream of ["stdout", "stderr"] as const) {
     for (const line of result[stream].split("\n").filter(Boolean)) {
       const event = harnessAdapter(plan.harness.kind).normalizeLine(stream, line);
       capture(event.eventType, invocation.sourceName, event.payload, event.providerFields);
+      reportedCostUsd = maximumReportedCost(reportedCostUsd, event.providerFields);
     }
   }
   if (result.timedOut) spawnSync("docker", ["rm", "--force", name], { encoding: "utf8" });
-  return result;
+  return { ...result, reportedCostUsd };
 }
 
 function hasManualStop(plan: RunPlan): boolean {
   return plan.administrationPath !== undefined && administrationRecords(resolve(plan.administrationPath)).some((record) => record.recordType === "intervention" && record.category === "manual-budget-stop");
 }
 
-function runVisibleChecks(plan: RunPlan, workspace: string, capture: (type: string, source: string, payload: unknown) => void, started: bigint): { readonly passed: boolean; readonly failures: readonly string[] } {
-  const failures: string[] = [];
-  for (const check of plan.visibleChecks) {
-    const result = runCommand("docker", ["run", "--rm", "--network", "none", "--volume", `${workspace}:/workspace`, "--workdir", "/workspace", plan.container.image, ...check.command], remainingMilliseconds(started, plan.budget.wallClockSeconds));
-    const passed = result.status === 0 && !result.timedOut;
-    capture("visible-verification", "runner", { checkId: check.checkId, passed, status: result.status, stdout: result.stdout, stderr: result.stderr });
-    if (!passed) failures.push(`${check.checkId}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+function runVisibleChecks(plan: RunPlan, workspace: string, capture: (type: string, source: string, payload: unknown) => void, started: bigint): { readonly passed: boolean; readonly failures: readonly string[]; readonly timedOut: boolean } {
+  const publicRoot = resolve(plan.visibleVerification.publicRoot);
+  const checkBundle = resolve(plan.visibleVerification.checkBundlePath);
+  const reportDirectory = join(resolve(workspace, ".."), ".verification");
+  mkdirSync(reportDirectory, { recursive: true });
+  const reportPath = join(reportDirectory, `report-${process.hrtime.bigint()}.json`);
+  capture("verification-started", "runner", { interface: "verification execute" });
+  const result = runCommand(
+    join(publicRoot, "change-two"),
+    ["verification", "execute", workspace, checkBundle, reportPath],
+    remainingMilliseconds(started, plan.budget.wallClockSeconds),
+  );
+  if (result.timedOut) {
+    cleanupVerificationSession(reportPath);
+    capture("verification-completed", "runner", { passed: false, timedOut: true });
+    return { passed: false, failures: [], timedOut: true };
   }
-  return { passed: failures.length === 0, failures };
+  if (!existsSync(reportPath)) throw new RunnerError("infrastructure", `Verification CLI did not emit a report: ${result.stderr.trim()}`);
+  const report = JSON.parse(readFileSync(reportPath, "utf8")) as VerificationReport;
+  if (report.schemaVersion !== "verification-report/v1" || !Array.isArray(report.checks)) throw new RunnerError("infrastructure", "Verification CLI emitted an invalid report.");
+  if (report.error !== null && report.error.category !== "application") throw new RunnerError("infrastructure", `Verification ${report.error.category}: ${report.error.diagnostic}`);
+  const failures: string[] = [];
+  for (const check of report.checks) {
+    capture("visible-verification", "runner", check);
+    if (check.status !== "passed") failures.push(`${check.checkId}\n${check.diagnostics.join("\n")}`);
+  }
+  capture("verification-completed", "runner", { passed: report.passed, timedOut: false });
+  return { passed: report.passed && failures.length === 0, failures, timedOut: false };
 }
+function createNetworkSession(plan: RunPlan): NetworkSession {
+  if (plan.container.network.mode === "none") return { name: "none", proxyContainer: null };
+  const suffix = `${process.pid}-${randomBytes(4).toString("hex")}`;
+  const name = `change-two-run-${suffix}`;
+  const proxyContainer = `${name}-proxy`;
+  const label = `change-two.runner-network=${suffix}`;
+  runChecked("docker", ["network", "create", "--internal", "--label", label, name], undefined, "infrastructure");
+  try {
+    runChecked("docker", [
+      "run", "--detach", "--name", proxyContainer, "--label", label,
+      "--network", "bridge", "--read-only", "--cap-drop", "ALL",
+      "--security-opt", "no-new-privileges",
+      "--env", `ALLOWED_HOSTS=${plan.container.network.allowedHosts.join(",")}`,
+      plan.container.image, "node", "/workspace/packages/runner/src/egress-proxy.mjs",
+    ], undefined, "infrastructure");
+    runChecked("docker", ["network", "connect", "--alias", "egress-proxy", name, proxyContainer], undefined, "infrastructure");
+    return { name, proxyContainer };
+  } catch (error) {
+    cleanupNetworkSession({ name, proxyContainer });
+    throw error;
+  }
+}
+
+function cleanupNetworkSession(session: NetworkSession): void {
+  if (session.proxyContainer !== null) runCommand("docker", ["rm", "--force", session.proxyContainer]);
+  if (session.name !== "none") runCommand("docker", ["network", "rm", session.name]);
+}
+
 
 function validatePlan(plan: RunPlan): void {
   if (plan.schemaVersion !== "runner/v1") throw new RunnerError("input", "Unsupported runner schemaVersion.");
   if (!/^[a-f0-9]{40}$/.test(plan.startingCommit)) throw new RunnerError("input", "startingCommit must be a full lowercase Git commit.");
   if (plan.budget.wallClockSeconds < 1 || plan.budget.recoveryAttempts < 0) throw new RunnerError("input", "Budget values are invalid.");
   if (plan.container.cpus <= 0 || plan.container.memory.length === 0 || plan.container.image.length === 0) throw new RunnerError("input", "Container policy is incomplete.");
-  if (plan.visibleChecks.length === 0) throw new RunnerError("input", "At least one Visible Check is required.");
+  if (plan.visibleVerification === undefined || plan.visibleVerification.publicRoot.length === 0 || plan.visibleVerification.checkBundlePath.length === 0) throw new RunnerError("input", "Visible verification interface is incomplete.");
+  if (plan.container.network.mode === "controlled") {
+    if (plan.container.network.allowedHosts.length === 0 || new Set(plan.container.network.allowedHosts).size !== plan.container.network.allowedHosts.length) throw new RunnerError("input", "Controlled network allowedHosts must be non-empty and unique.");
+    for (const host of plan.container.network.allowedHosts) {
+      if (host === "localhost" || /^[0-9.]+$/.test(host) || !/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(host) || host.includes("..")) throw new RunnerError("input", `Invalid controlled network host: ${host}`);
+    }
+  } else if (plan.harness.kind !== "synthetic") {
+    throw new RunnerError("input", "Agent harnesses require a controlled network.");
+  }
 }
 
 function remainingMilliseconds(started: bigint, budgetSeconds: number): number {
@@ -199,5 +283,27 @@ function runCommand(command: string, arguments_: readonly string[], timeout?: nu
   const executable = timeout === undefined ? command : "timeout";
   const effectiveArguments = timeout === undefined ? arguments_ : ["--signal=KILL", `${timeout / 1000}s`, command, ...arguments_];
   const result = spawnSync(executable, effectiveArguments, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-  return { status: result.status, signal: result.signal, stdout: result.stdout ?? "", stderr: result.stderr ?? "", timedOut: timeout !== undefined && (result.status === 124 || result.status === 137 || result.signal === "SIGKILL") };
+  return { status: result.status, signal: result.signal, stdout: result.stdout ?? "", stderr: result.stderr ?? "", timedOut: timeout !== undefined && (result.status === 124 || result.status === 137 || result.signal === "SIGKILL"), reportedCostUsd: null };
+}
+
+function maximumReportedCost(current: number | null, fields: Readonly<Record<string, unknown>> | null): number | null {
+  if (fields === null) return current;
+  let found = current;
+  const visit = (value: unknown): void => {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return;
+    for (const [key, nested] of Object.entries(value)) {
+      if ((key === "total_cost_usd" || key === "cost_usd") && typeof nested === "number" && Number.isFinite(nested) && nested >= 0) {
+        found = found === null ? nested : Math.max(found, nested);
+      } else {
+        visit(nested);
+      }
+    }
+  };
+  visit(fields);
+  return found;
+}
+
+function addReportedSpend(total: number | null, invocation: number | null): number | null {
+  if (invocation === null) return total;
+  return (total ?? 0) + invocation;
 }

@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 
 import { correctTimer, recordIntervention, startTimer, stopTimer } from "./administration.js";
 import { executeRun } from "./runner.js";
+import { executeVerification } from "./verification.js";
 import { RunnerError, type InterventionCategory, type RunPlan } from "./types.js";
 
 const [command, ...arguments_] = process.argv.slice(2);
@@ -15,6 +16,13 @@ try {
       requireCount(arguments_, 2);
       const plan = loadPlan(arguments_[0] as string);
       console.log(JSON.stringify(executeRun(plan, arguments_[1] as string)));
+      break;
+    }
+    case "verification-execute": {
+      requireCount(arguments_, 4);
+      const report = executeVerification(arguments_[0] as string, arguments_[1] as string, arguments_[2] as string, arguments_[3] as string);
+      console.log(JSON.stringify(report));
+      process.exitCode = report.error === null ? (report.passed ? 0 : 1) : 2;
       break;
     }
     case "timer-start": {
@@ -66,6 +74,7 @@ function requireCount(values: readonly string[], count: number): void {
 function usage(): void {
   console.error("Usage:");
   console.error("  ./change-two runner execute <plan.json> <output-dir>");
+  console.error("  ./change-two verification execute <workspace> <check-bundle-dir> <output.json>");
   console.error("  ./change-two runner timer-start <admin.jsonl> <actor> operator|reviewer");
   console.error("  ./change-two runner timer-stop <admin.jsonl> <timer-id> <actor>");
   console.error("  ./change-two runner timer-correct <admin.jsonl> <timer-id> <actor> <seconds> <reason>");

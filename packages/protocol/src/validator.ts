@@ -351,7 +351,7 @@ function validateSeasonReferences(document: ProtocolDocument): ValidationIssue[]
     "Lineage",
     issues,
   );
-  indexDocuments(
+  const harnesses = indexDocuments(
     document.harnesses,
     "harnessId",
     "/harnesses",
@@ -369,6 +369,21 @@ function validateSeasonReferences(document: ProtocolDocument): ValidationIssue[]
   const lineageValues = Array.isArray(document.lineages)
     ? document.lineages
     : [];
+  const roles = isProtocolDocument(document.roles) ? document.roles : {};
+  const builderIds = new Set(Array.isArray(roles.builderIds) ? roles.builderIds : []);
+  const operatorIds = new Set(Array.isArray(roles.operatorIds) ? roles.operatorIds : []);
+  for (const role of ["independentReviewerId", "blindedReviewerId"] as const) {
+    const reviewerId = roles[role];
+    if (builderIds.has(reviewerId) || operatorIds.has(reviewerId)) {
+      issues.push(
+        issue(
+          `/roles/${role}`,
+          "separation",
+          `${String(reviewerId)} must not also be a builder or operator`,
+        ),
+      );
+    }
+  }
   for (const [index, lineage] of lineageValues.entries()) {
     if (!isProtocolDocument(lineage)) continue;
     validateVersionedReference(
@@ -385,19 +400,51 @@ function validateSeasonReferences(document: ProtocolDocument): ValidationIssue[]
       "Budget",
       issues,
     );
-  }
-
-  const executionOrder = isProtocolDocument(document.executionOrder)
-    ? document.executionOrder.lineageIds
-    : undefined;
-  if (Array.isArray(executionOrder)) {
-    validateSameIds(
-      executionOrder,
-      new Set(lineages.keys()),
-      "/executionOrder/lineageIds",
-      "Lineage",
+    validateIdReference(
+      lineage.builderId,
+      builderIds,
+      `/lineages/${index}/builderId`,
+      "builder",
       issues,
     );
+    if (lineage.workflow === "agent") {
+      validateIdReference(
+        lineage.harnessId,
+        new Set(harnesses.keys()),
+        `/lineages/${index}/harnessId`,
+        "harness",
+        issues,
+      );
+    }
+  }
+
+  const executionRounds = isProtocolDocument(document.executionOrder)
+    ? document.executionOrder.rounds
+    : undefined;
+  if (Array.isArray(executionRounds)) {
+    const seenChangeIds = new Set<unknown>();
+    for (const [index, round] of executionRounds.entries()) {
+      if (!isProtocolDocument(round)) continue;
+      if (seenChangeIds.has(round.changeId)) {
+        issues.push(
+          issue(
+            `/executionOrder/rounds/${index}/changeId`,
+            "unique",
+            `duplicates Change '${String(round.changeId)}'`,
+          ),
+        );
+      }
+      seenChangeIds.add(round.changeId);
+      if (Array.isArray(round.lineageIds)) {
+        validateSameIds(
+          round.lineageIds,
+          new Set(lineages.keys()),
+          `/executionOrder/rounds/${index}/lineageIds`,
+          "Lineage",
+          issues,
+        );
+      }
+    }
   }
   return issues;
 }
@@ -474,6 +521,20 @@ function validateVersionedReference(
         "reference",
         `does not match ${label} '${String(value.id)}' version '${String(referenced.version)}'`,
       ),
+    );
+  }
+}
+
+function validateIdReference(
+  value: unknown,
+  known: ReadonlySet<unknown>,
+  path: string,
+  label: string,
+  issues: ValidationIssue[],
+): void {
+  if (!known.has(value)) {
+    issues.push(
+      issue(path, "reference", `references unknown ${label} '${String(value)}'`),
     );
   }
 }

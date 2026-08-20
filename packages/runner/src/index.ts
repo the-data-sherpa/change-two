@@ -10,6 +10,7 @@ export {
   type TimerInterval,
 } from "./administration.js";
 export { executeRun } from "./runner.js";
+export { executeVerification } from "./verification.js";
 export {
   RunnerError,
   type HarnessAdapter,
@@ -20,4 +21,7 @@ export {
   type RunPlan,
   type RunResult,
   type TerminationCause,
+  type VerificationCheckResult,
+  type VerificationCheckStatus,
+  type VerificationReport,
 } from "./types.js";

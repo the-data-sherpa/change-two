@@ -32,6 +32,8 @@
       "lineageId": "lineage:agent-a-minimal",
       "displayName": "Agent A minimal intervention",
       "workflow": "agent",
+      "builderId": "actor:builder-01",
+      "harnessId": "harness:claude-code",
       "policyRef": {
         "id": "policy:minimal-v1",
         "version": "1.0.0"
@@ -117,8 +119,13 @@
   "executionOrder": {
     "algorithm": "balanced rotation",
     "seed": "season-zero-order-seed",
-    "lineageIds": [
-      "lineage:agent-a-minimal"
+    "rounds": [
+      {
+        "changeId": "change:c0",
+        "lineageIds": [
+          "lineage:agent-a-minimal"
+        ]
+      }
     ]
   },
   "networkPolicy": {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { unlinkSync, writeFileSync } from "node:fs";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -22,8 +22,65 @@ test("all valid fixtures pass and all invalid fixtures fail", () => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(
     result.stdout,
-    /Fixture validation passed: 14 valid and 13 invalid fixture\(s\)\./,
+    /Fixture validation passed: 15 valid and 15 invalid fixture\(s\)\./,
   );
+});
+
+test("every execution round covers every declared Lineage", () => {
+  const sourcePath = resolve(
+    repositoryRoot,
+    "fixtures/protocol/valid/season-manifest.json",
+  );
+  const manifest = JSON.parse(readFileSync(sourcePath, "utf8")) as {
+    lineages: Array<Record<string, unknown>>;
+  };
+  manifest.lineages.push({
+    ...manifest.lineages[0],
+    lineageId: "lineage:agent-b-minimal",
+  });
+  const path = resolve(tmpdir(), `change-two-incomplete-order-${process.pid}.json`);
+  writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+  try {
+    const result = runCli("validate", path);
+
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /\/executionOrder\/rounds\/0\/lineageIds \[coverage\]/,
+    );
+    assert.match(result.stderr, /lineage:agent-b-minimal/);
+  } finally {
+    unlinkSync(path);
+  }
+});
+
+test("reviewers cannot also build or operate a Season", () => {
+  const sourcePath = resolve(
+    repositoryRoot,
+    "fixtures/protocol/valid/season-manifest.json",
+  );
+  const manifest = JSON.parse(readFileSync(sourcePath, "utf8")) as {
+    roles: {
+      builderIds: string[];
+      independentReviewerId: string;
+    };
+  };
+  manifest.roles.independentReviewerId = manifest.roles.builderIds[0]!;
+  const path = resolve(tmpdir(), `change-two-conflicted-reviewer-${process.pid}.json`);
+  writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+  try {
+    const result = runCli("validate", path);
+
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /\/roles\/independentReviewerId \[separation\]/,
+    );
+  } finally {
+    unlinkSync(path);
+  }
 });
 
 test("the released Change 0 evaluation matrix is complete", () => {

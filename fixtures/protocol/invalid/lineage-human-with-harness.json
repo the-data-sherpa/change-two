@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "lineage",
+  "lineageId": "lineage:human-with-harness",
+  "displayName": "Human baseline with an agent harness",
+  "workflow": "human-baseline",
+  "builderId": "actor:human-baseline-01",
+  "harnessId": "harness:claude-code",
+  "policyRef": {
+    "id": "policy:human-baseline-v1",
+    "version": "1.0.0"
+  },
+  "budgetRef": {
+    "id": "budget:human-v1",
+    "version": "1.0.0"
+  }
+}

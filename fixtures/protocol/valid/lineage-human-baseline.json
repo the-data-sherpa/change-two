@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "lineage",
+  "lineageId": "lineage:human-baseline",
+  "displayName": "Human baseline",
+  "workflow": "human-baseline",
+  "builderId": "actor:human-baseline-01",
+  "policyRef": {
+    "id": "policy:human-baseline-v1",
+    "version": "1.0.0"
+  },
+  "budgetRef": {
+    "id": "budget:human-v1",
+    "version": "1.0.0"
+  }
+}
