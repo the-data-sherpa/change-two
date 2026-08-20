@@ -28,7 +28,7 @@
     "modelSpend": {
       "currency": "USD",
       "maximum": 25,
-      "measurementMode": "observed-after-run"
+      "measurementMode": "unavailable"
     }
   },
   "container": {
@@ -51,6 +51,6 @@
     "environment": {
       "CI": "true"
     },
-    "credentialEnvironment": ["ANTHROPIC_API_KEY"]
+    "credentialEnvironment": ["CLAUDE_CODE_OAUTH_TOKEN"]
   }
 }

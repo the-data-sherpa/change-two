@@ -114,14 +114,14 @@ Run a versioned Run Plan and keep the resulting `capture.jsonl`, `submitted.patc
 ./change-two verify runner
 ```
 
-For the unmeasured practice Run, place a dedicated Anthropic key in `~/.config/change-two/secrets/anthropic-api-key`. The file must be owned by the current User with mode `0600`. The command loads it without placing the key in shell history:
+For the unmeasured practice Run, generate a long-lived Claude Code OAuth token with `claude setup-token` using the Claude account attached to a Pro, Max, Team, or Enterprise subscription. Store only the token in `~/.config/change-two/secrets/claude-code-oauth-token`. The file must be owned by the current User with mode `0600`. The command loads it without placing the token in shell history:
 
 ```bash
 ./change-two practice build
 ./change-two practice execute protocol/practice/run-plan.json runs/private/practice-c0
 ```
 
-Use a provider workspace spend cap of USD 25. The runner still records provider-reported spend as observed data; it does not claim real-time monetary enforcement.
+The subscription supplies Claude Code model access without API funding. The runner records model spend as unavailable because subscription usage has no provider-reported per-Run monetary amount.
 
 
 Run a trusted bundle against a submitted workspace with:

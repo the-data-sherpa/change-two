@@ -198,7 +198,7 @@ practice() {
       ;;
     execute)
       [[ $# -eq 3 ]] || { usage; exit 2; }
-      local secret_file=${CHANGE_TWO_ANTHROPIC_KEY_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/change-two/secrets/anthropic-api-key}
+      local secret_file=${CHANGE_TWO_CLAUDE_OAUTH_TOKEN_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/change-two/secrets/claude-code-oauth-token}
       [[ -f "$secret_file" && -r "$secret_file" ]] || {
         echo "Practice credential file is missing or unreadable: $secret_file" >&2
         exit 1
@@ -208,15 +208,15 @@ practice() {
         exit 1
       }
 
-      ANTHROPIC_API_KEY=$(<"$secret_file")
-      export ANTHROPIC_API_KEY
-      [[ "$ANTHROPIC_API_KEY" == sk-ant-* ]] || {
-        unset ANTHROPIC_API_KEY
-        echo "Practice credential does not have the expected Anthropic key prefix." >&2
+      CLAUDE_CODE_OAUTH_TOKEN=$(<"$secret_file")
+      export CLAUDE_CODE_OAUTH_TOKEN
+      [[ -n "$CLAUDE_CODE_OAUTH_TOKEN" && "$CLAUDE_CODE_OAUTH_TOKEN" != *$'\n'* ]] || {
+        unset CLAUDE_CODE_OAUTH_TOKEN
+        echo "Practice Claude Code OAuth token is empty or malformed." >&2
         exit 1
       }
       runner execute "$2" "$3"
-      unset ANTHROPIC_API_KEY
+      unset CLAUDE_CODE_OAUTH_TOKEN
       ;;
     *)
       usage
