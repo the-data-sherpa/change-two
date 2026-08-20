@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -152,25 +152,40 @@ export function executeRun(plan: RunPlan, outputDirectory: string): RunResult {
 
 function invokeHarness(plan: RunPlan, workspace: string, invocation: HarnessInvocation, capture: (type: string, source: string, payload: unknown, fields?: Readonly<Record<string, unknown>> | null) => void, timeoutMilliseconds: number, networkName: string): CommandResult {
   const name = `change-two-${plan.runId.replace(/[^a-zA-Z0-9_.-]/g, "-")}`;
+  if (process.getuid === undefined || process.getgid === undefined) throw new RunnerError("infrastructure", "Runner requires a POSIX host user.");
+  const hostUser = `${process.getuid()}:${process.getgid()}`;
   const environmentArguments: string[] = [];
   for (const [key, value] of Object.entries({ ...plan.container.environment, ...invocation.environment })) environmentArguments.push("--env", `${key}=${value}`);
   for (const key of plan.container.credentialEnvironment) {
     if (process.env[key] === undefined) throw new RunnerError("input", `Declared credential environment variable is unavailable: ${key}`);
     environmentArguments.push("--env", key);
   }
+  const credentialMountArguments: string[] = [];
+  for (const mount of plan.container.credentialMounts ?? []) {
+    const source = process.env[mount.sourceEnvironment];
+    if (source === undefined) throw new RunnerError("input", `Declared credential mount environment variable is unavailable: ${mount.sourceEnvironment}`);
+    const absoluteSource = resolve(source);
+    if (!existsSync(absoluteSource)) throw new RunnerError("input", `Credential mount source does not exist: ${absoluteSource}`);
+    const metadata = statSync(absoluteSource);
+    if (!metadata.isDirectory() || metadata.uid !== process.getuid() || (metadata.mode & 0o777) !== 0o700) {
+      throw new RunnerError("input", `Credential mount source must be a current-user directory with mode 0700: ${absoluteSource}`);
+    }
+    credentialMountArguments.push("--volume", `${absoluteSource}:${mount.target}`);
+  }
   if (plan.container.network.mode === "controlled") {
     environmentArguments.push(
       "--env", "HTTP_PROXY=http://egress-proxy:3128",
       "--env", "HTTPS_PROXY=http://egress-proxy:3128",
-      "--env", "ALL_PROXY=http://egress-proxy:3128",
       "--env", "NO_PROXY=127.0.0.1,localhost",
+      "--env", "http_proxy=http://egress-proxy:3128",
+      "--env", "https_proxy=http://egress-proxy:3128",
+      "--env", "no_proxy=127.0.0.1,localhost",
       "--env", "NODE_USE_ENV_PROXY=1",
     );
   }
   const inputDirectory = join(resolve(workspace, ".."), ".input");
-  if (process.getuid === undefined || process.getgid === undefined) throw new RunnerError("infrastructure", "Runner requires a POSIX host user.");
-  const hostUser = `${process.getuid()}:${process.getgid()}`;
-  const arguments_ = ["run", "--rm", "--name", name, "--user", hostUser, "--cpus", String(plan.container.cpus), "--memory", plan.container.memory, "--network", networkName, "--volume", `${workspace}:/submission`, "--volume", `${inputDirectory}:/run-input:ro`, "--workdir", "/submission", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--env", "HOME=/tmp", ...environmentArguments, plan.container.image, ...invocation.command];
+
+  const arguments_ = ["run", "--rm", "--name", name, "--user", hostUser, "--cpus", String(plan.container.cpus), "--memory", plan.container.memory, "--network", networkName, "--volume", `${workspace}:/submission`, "--volume", `${inputDirectory}:/run-input:ro`, ...credentialMountArguments, "--workdir", "/submission", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--env", "HOME=/tmp", ...environmentArguments, plan.container.image, ...invocation.command];
   capture("harness-started", "runner", { source: invocation.sourceName, command: invocation.command.slice(0, 3) });
   spawnSync("docker", ["rm", "--force", name], { encoding: "utf8" });
   const result = runCommand("docker", arguments_, timeoutMilliseconds);
@@ -254,6 +269,13 @@ function validatePlan(plan: RunPlan): void {
   if (plan.budget.wallClockSeconds < 1 || plan.budget.recoveryAttempts < 0) throw new RunnerError("input", "Budget values are invalid.");
   if (plan.container.cpus <= 0 || plan.container.memory.length === 0 || plan.container.image.length === 0) throw new RunnerError("input", "Container policy is incomplete.");
   if (plan.visibleVerification === undefined || plan.visibleVerification.publicRoot.length === 0 || plan.visibleVerification.checkBundlePath.length === 0) throw new RunnerError("input", "Visible verification interface is incomplete.");
+  const credentialTargets = new Set<string>();
+  for (const mount of plan.container.credentialMounts ?? []) {
+    if (!/^[A-Z][A-Z0-9_]*$/.test(mount.sourceEnvironment)) throw new RunnerError("input", `Invalid credential mount environment name: ${mount.sourceEnvironment}`);
+    if (!/^\/run-credentials\/[a-z0-9][a-z0-9-]*$/.test(mount.target)) throw new RunnerError("input", `Invalid credential mount target: ${mount.target}`);
+    if (credentialTargets.has(mount.target)) throw new RunnerError("input", `Duplicate credential mount target: ${mount.target}`);
+    credentialTargets.add(mount.target);
+  }
   if (plan.container.network.mode === "controlled") {
     if (plan.container.network.allowedHosts.length === 0 || new Set(plan.container.network.allowedHosts).size !== plan.container.network.allowedHosts.length) throw new RunnerError("input", "Controlled network allowedHosts must be non-empty and unique.");
     for (const host of plan.container.network.allowedHosts) {

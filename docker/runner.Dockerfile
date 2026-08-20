@@ -6,6 +6,9 @@ ENV PNPM_HOME=/pnpm
 ENV PATH=/runtime/packages/runner/node_modules/.bin:${PNPM_HOME}:${PATH}
 WORKDIR /runtime
 
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates=20250419~deb12u1 \
+    && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare "pnpm@${PNPM_VERSION}" --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/starter-api/package.json apps/starter-api/package.json

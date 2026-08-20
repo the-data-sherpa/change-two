@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "runner/v1",
+  "runId": "run:practice-c0-codex-minimal",
+  "sourceRepository": "https://github.com/the-data-sherpa/change-two.git",
+  "startingCommit": "3fd5368095171816a6df6e3ef05890d8c5a0ff1e",
+  "requirementPath": "requirements/released/change-0/requirement.md",
+  "visibleVerification": {
+    "publicRoot": ".",
+    "checkBundlePath": "requirements/released/change-0/visible-checks"
+  },
+  "harness": {
+    "kind": "codex",
+    "version": "0.147.0",
+    "model": "gpt-5.4",
+    "tools": ["filesystem", "shell"],
+    "permissions": ["workspace-read", "workspace-write", "controlled-network"]
+  },
+  "administrationPath": "runs/private/practice-c0-codex-administration.jsonl",
+  "policy": {
+    "mode": "minimal",
+    "allowedInterventions": ["unavailable-information", "independent-infrastructure-failure", "safety-stop"]
+  },
+  "budget": {
+    "wallClockSeconds": 5400,
+    "operatorActiveSeconds": 300,
+    "reviewerActiveSeconds": 0,
+    "recoveryAttempts": 3,
+    "modelSpend": {
+      "currency": "USD",
+      "maximum": 25,
+      "measurementMode": "unavailable"
+    }
+  },
+  "container": {
+    "image": "sha256:8f6a66a5fbc3b284d264f7a0c39b67758e035828a9b53ee9decbd36ead729d7e",
+    "network": {
+      "mode": "controlled",
+      "allowedHosts": [
+        "api.github.com",
+        "api.openai.com",
+        "auth.openai.com",
+        "chatgpt.com",
+        "codeload.github.com",
+        "github.com",
+        "objects.githubusercontent.com",
+        "raw.githubusercontent.com",
+        "registry.npmjs.org",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    "cpus": 2,
+    "memory": "4g",
+    "environment": {
+      "CI": "true",
+      "CODEX_HOME": "/run-credentials/codex"
+    },
+    "credentialEnvironment": [],
+    "credentialMounts": [
+      {
+        "sourceEnvironment": "CHANGE_TWO_CODEX_HOME",
+        "target": "/run-credentials/codex"
+      }
+    ]
+  }
+}

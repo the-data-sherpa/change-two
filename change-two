@@ -198,25 +198,26 @@ practice() {
       ;;
     execute)
       [[ $# -eq 3 ]] || { usage; exit 2; }
-      local secret_file=${CHANGE_TWO_CLAUDE_OAUTH_TOKEN_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/change-two/secrets/claude-code-oauth-token}
-      [[ -f "$secret_file" && -r "$secret_file" ]] || {
-        echo "Practice credential file is missing or unreadable: $secret_file" >&2
+      local auth_file=${CHANGE_TWO_CODEX_AUTH_FILE:-$HOME/.codex/auth.json}
+      [[ -f "$auth_file" && -r "$auth_file" ]] || {
+        echo "Practice Codex credential file is missing or unreadable: $auth_file" >&2
         exit 1
       }
-      [[ "$(stat -c '%u' "$secret_file")" == "$(id -u)" && "$(stat -c '%a' "$secret_file")" == "600" ]] || {
-        echo "Practice credential file must be owned by the current user with mode 0600: $secret_file" >&2
+      [[ "$(stat -c '%u' "$auth_file")" == "$(id -u)" && "$(stat -c '%a' "$auth_file")" == "600" ]] || {
+        echo "Practice Codex credential file must be owned by the current user with mode 0600: $auth_file" >&2
         exit 1
       }
 
-      CLAUDE_CODE_OAUTH_TOKEN=$(<"$secret_file")
-      export CLAUDE_CODE_OAUTH_TOKEN
-      [[ -n "$CLAUDE_CODE_OAUTH_TOKEN" && "$CLAUDE_CODE_OAUTH_TOKEN" != *$'\n'* ]] || {
-        unset CLAUDE_CODE_OAUTH_TOKEN
-        echo "Practice Claude Code OAuth token is empty or malformed." >&2
-        exit 1
-      }
-      runner execute "$2" "$3"
-      unset CLAUDE_CODE_OAUTH_TOKEN
+      local credential_home status
+      credential_home=$(mktemp -d)
+      chmod 0700 "$credential_home"
+      cp "$auth_file" "$credential_home/auth.json"
+      chmod 0600 "$credential_home/auth.json"
+      export CHANGE_TWO_CODEX_HOME=$credential_home
+      if runner execute "$2" "$3"; then status=0; else status=$?; fi
+      unset CHANGE_TWO_CODEX_HOME
+      rm -rf -- "$credential_home"
+      return "$status"
       ;;
     *)
       usage

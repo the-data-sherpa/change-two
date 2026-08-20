@@ -50,6 +50,10 @@ export interface RunPlan {
     readonly memory: string;
     readonly environment: Readonly<Record<string, string>>;
     readonly credentialEnvironment: readonly string[];
+    readonly credentialMounts?: readonly {
+      readonly sourceEnvironment: string;
+      readonly target: string;
+    }[];
   };
 }
 

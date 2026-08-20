@@ -114,14 +114,15 @@ Run a versioned Run Plan and keep the resulting `capture.jsonl`, `submitted.patc
 ./change-two verify runner
 ```
 
-For the unmeasured practice Run, generate a long-lived Claude Code OAuth token with `claude setup-token` using the Claude account attached to a Pro, Max, Team, or Enterprise subscription. Store only the token in `~/.config/change-two/secrets/claude-code-oauth-token`. The file must be owned by the current User with mode `0600`. The command loads it without placing the token in shell history:
+For the unmeasured practice Run, authenticate Codex CLI with the ChatGPT account attached to a Plus, Pro, Business, Edu, or Enterprise subscription. The host credential file `~/.codex/auth.json` must be owned by the current User with mode `0600`. The practice wrapper copies it into an ephemeral mode-`0700` directory, mounts that directory only into the agent container, and deletes the copy when execution ends:
 
 ```bash
+codex login status
 ./change-two practice build
-./change-two practice execute protocol/practice/run-plan.json runs/private/practice-c0
+./change-two practice execute protocol/practice/run-plan-codex.json runs/private/practice-c0-codex
 ```
 
-The subscription supplies Claude Code model access without API funding. The runner records model spend as unavailable because subscription usage has no provider-reported per-Run monetary amount.
+The ChatGPT subscription supplies Codex model access without API funding. The runner records model spend as unavailable because subscription usage has no provider-reported per-Run monetary amount. The earlier Claude Code practice attempt is preserved as an authentication failure; it is not overwritten or represented as a Codex result.
 
 
 Run a trusted bundle against a submitted workspace with:
@@ -132,7 +133,7 @@ Run a trusted bundle against a submitted workspace with:
 
 The verifier mounts submitted source read-only, copies it inside a pinned application runtime, and starts isolated PostgreSQL, API, and web services without trusting submitted Compose or Docker inputs. A separate trusted checker container receives the read-only Check bundle but not the submitted source. Submitted application processes never receive the Check bundle, host Docker socket, or provider credentials. The report uses `verification-report/v1`, preserves ordered per-Check diagnostics and evidence, and leaves the supplied workspace byte-equivalent. The Change 0 public bundle is `requirements/released/change-0/visible-checks`; it is a Run Plan input and is intentionally not part of root `check`.
 
-Administrative commands append explicit operator or reviewer timer intervals, corrections, and policy-checked Interventions. `manual-budget-stop` records the Intervention before it stops the active harness container. Host environment variables reach the agent only when the Run Plan names them in `credentialEnvironment`; Docker receives credential names rather than secret values in its command arguments.
+Administrative commands append explicit operator or reviewer timer intervals, corrections, and policy-checked Interventions. `manual-budget-stop` records the Intervention before it stops the active harness container. Host environment variables reach the agent only when the Run Plan names them in `credentialEnvironment`. Credential directories reach the agent only through declared `credentialMounts`; the runner requires a current-user source directory with mode `0700` and restricts mount targets to `/run-credentials/*`.
 
 ## Repository commands
 

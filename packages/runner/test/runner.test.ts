@@ -77,8 +77,17 @@ function plan(f: Fixture, command: readonly string[], overrides: Partial<RunPlan
 test("isolates inputs, normalizes provenance, and finalizes an immutable submission", { skip: !HAS_INTEGRATION_TOOLS }, () => {
   const f = fixture();
   process.env.UNDECLARED_SECRET = "not-forwarded";
+  const credentialHome = join(f.root, "credential-home");
+  mkdirSync(credentialHome, { mode: 0o700 });
+  writeFileSync(join(credentialHome, "auth.json"), "credential fixture\n", { mode: 0o600 });
+  process.env.TEST_CREDENTIAL_HOME = credentialHome;
   const output = join(f.root, "output");
-  const runPlan = plan(f, ["sh", "-c", "test -f /run-input/CHANGE.md && test ! -w /run-input && test ! -e /run-input/visible-checks.json && test ! -e /parent-secret && test -z \"${UNDECLARED_SECRET:-}\" && printf '{\"type\":\"result\",\"total_cost_usd\":0.42}\\n' && printf implemented > result.txt"]);
+  const basePlan = plan(f, ["true"]);
+  const runPlan = plan(
+    f,
+    ["sh", "-c", "test -f /run-input/CHANGE.md && test ! -w /run-input && test ! -e /run-input/visible-checks.json && test ! -e /parent-secret && test -z \"${UNDECLARED_SECRET:-}\" && test \"$(cat /run-credentials/test/auth.json)\" = \"credential fixture\" && printf '{\"type\":\"result\",\"total_cost_usd\":0.42}\\n' && printf implemented > result.txt"],
+    { container: { ...basePlan.container, credentialMounts: [{ sourceEnvironment: "TEST_CREDENTIAL_HOME", target: "/run-credentials/test" }] } },
+  );
   const planPath = join(f.root, "plan.json");
   writeFileSync(planPath, JSON.stringify(runPlan));
   const result = JSON.parse(execFileSync("./change-two", ["runner", "execute", planPath, output], { cwd: process.cwd(), encoding: "utf8" })) as RunResult;
@@ -90,6 +99,7 @@ test("isolates inputs, normalizes provenance, and finalizes an immutable submiss
   const events = readFileSync(join(output, "capture.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as { eventType: string; source: { name: string; providerFields: unknown } });
   assert.ok(events.some((event) => event.eventType === "provider-event" && event.source.name === "synthetic@1.0.0" && event.source.providerFields !== null));
   assert.throws(() => executeRun(plan(f, ["true"]), output), /Output already exists/);
+  delete process.env.TEST_CREDENTIAL_HOME;
 });
 
 test("returns visible failures for recovery and finalizes recovery exhaustion without repair", { skip: !HAS_INTEGRATION_TOOLS }, () => {
