@@ -1,0 +1,243 @@
+{
+  "schemaVersion": "1.0.0",
+  "schemaType": "season-manifest",
+  "seasonId": "season:practice-c0",
+  "status": "sealed",
+  "question": "Can the frozen Change Two pipeline execute, evaluate, sanitize, publish, and reproduce one unmeasured Change Zero Run without exposing measured Season material?",
+  "starter": {
+    "repository": "https://github.com/the-data-sherpa/change-two",
+    "commit": "3fd5368095171816a6df6e3ef05890d8c5a0ff1e"
+  },
+  "sealedArtifacts": [
+    {
+      "artifactId": "artifact:practice-c0-requirement",
+      "kind": "requirement",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "692d02a92799cbde50a1541530056e7740385c7e7368556f283e7826eaaa5492"
+    },
+    {
+      "artifactId": "artifact:practice-c0-visible-bundle",
+      "kind": "visible-evaluation",
+      "mediaType": "application/json",
+      "releaseStatus": "released",
+      "sha256": "9d518a5f741597cf6f45eecbd68ba154aa1f83ad83e5ace894c812fccfe6ce32"
+    },
+    {
+      "artifactId": "artifact:practice-c0-visible-checks",
+      "kind": "visible-evaluation",
+      "mediaType": "text/javascript",
+      "releaseStatus": "released",
+      "sha256": "a4b6d03500729cd9e037f3c15130be860a017e208b09f61948186ed5ef9e1eaf"
+    },
+    {
+      "artifactId": "artifact:practice-c0-hidden-bundle",
+      "kind": "hidden-evaluation",
+      "mediaType": "application/json",
+      "releaseStatus": "sealed",
+      "sha256": "dd6c525710216b4bb0dbb80d2e4b9bebfde2dbfa8dc2efdcd0111fc7e10713ce"
+    },
+    {
+      "artifactId": "artifact:practice-c0-hidden-checks",
+      "kind": "hidden-evaluation",
+      "mediaType": "text/javascript",
+      "releaseStatus": "sealed",
+      "sha256": "91fb01009bebff8598947d4d785644c935f0605a1ccb5327154f990fb16a0406"
+    },
+    {
+      "artifactId": "artifact:practice-agent-instructions-v1",
+      "kind": "instructions",
+      "mediaType": "text/plain",
+      "releaseStatus": "released",
+      "sha256": "7e57ac03a6428a0b55f8b8fc4b9836b12157b2b4e2320cfd30915586a50f0411"
+    },
+    {
+      "artifactId": "artifact:practice-repository-instructions-v1",
+      "kind": "instructions",
+      "mediaType": "text/plain",
+      "releaseStatus": "released",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "artifactId": "artifact:practice-outcome-rules-v1",
+      "kind": "rubric",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "f4f5f47e28aa02ba733ecc36c13987897fef71e7e83bfcfefe42bf891789719e"
+    },
+    {
+      "artifactId": "artifact:practice-confidence-instrument-v1",
+      "kind": "rubric",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "b68c7869733721304965f489a5654c8461a924d78b3a36e0fb81e6f9e8e48759"
+    },
+    {
+      "artifactId": "artifact:practice-blinded-review-rubric-v1",
+      "kind": "rubric",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "97f2cf2e890d5d01fcae3792be5299a6f7912c43fe986f6180c579494a63e99f"
+    },
+    {
+      "artifactId": "artifact:practice-redaction-policy-v1",
+      "kind": "policy",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "b80d9e177052a63f62cc22af03735fa4de819e6e1fae51b8c21ada142a4366f2"
+    },
+    {
+      "artifactId": "artifact:practice-retention-policy-v1",
+      "kind": "policy",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "d135aa2d5f851c5b08c6e116a1c734ac2820524d83d167b17e16b9d0b8557ca2"
+    },
+    {
+      "artifactId": "artifact:practice-incident-hold-policy-v1",
+      "kind": "policy",
+      "mediaType": "text/markdown",
+      "releaseStatus": "released",
+      "sha256": "042f60eb2002bf9237c39b042cefad284872ff5b1ddbe531c77fdecac21c617d"
+    }
+  ],
+  "lineages": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "lineage",
+      "lineageId": "lineage:practice-c0-claude-minimal",
+      "displayName": "Claude Code minimal-intervention practice",
+      "workflow": "agent",
+      "builderId": "actor:the-data-sherpa",
+      "harnessId": "harness:claude-code-2-1-226",
+      "policyRef": {
+        "id": "policy:practice-minimal-v1",
+        "version": "1.0.0"
+      },
+      "budgetRef": {
+        "id": "budget:practice-c0-v1",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "policy",
+      "policyId": "policy:practice-minimal-v1",
+      "version": "1.0.0",
+      "mode": "minimal",
+      "allowedInterventions": [
+        "unavailable-information",
+        "independent-infrastructure-failure",
+        "safety-stop"
+      ]
+    }
+  ],
+  "budgets": [
+    {
+      "schemaVersion": "1.0.0",
+      "schemaType": "budget",
+      "budgetId": "budget:practice-c0-v1",
+      "version": "1.0.0",
+      "limits": {
+        "wallClockSeconds": 5400,
+        "operatorActiveSeconds": 300,
+        "reviewerActiveSeconds": 0,
+        "recoveryAttempts": 3,
+        "modelSpend": {
+          "currency": "USD",
+          "maximum": 25,
+          "measurementMode": "unavailable"
+        }
+      }
+    }
+  ],
+  "harnesses": [
+    {
+      "harnessId": "harness:claude-code-2-1-226",
+      "name": "Claude Code",
+      "version": "2.1.226",
+      "model": "claude-sonnet-4-6",
+      "systemInstructionsSha256": "7e57ac03a6428a0b55f8b8fc4b9836b12157b2b4e2320cfd30915586a50f0411",
+      "repositoryInstructionsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tools": [
+        "filesystem",
+        "shell"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write",
+        "controlled-network"
+      ]
+    }
+  ],
+  "runtime": {
+    "image": "change-two-runner:practice",
+    "imageDigest": "sha256:6c0839241278c48e307bc0784e0b5c16cc7ea9229096b3713e562dc2bc44557e",
+    "lockfileSha256": "68893443147f17643c8825fc25dde5a4787ba77967b3f4c6787422aa9bdb2e68",
+    "dependencyInventorySha256": "c88018221d7fed3f362557bb505238e09547666d44c01f3d6bf4a9e1176c8fe9"
+  },
+  "authentication": {
+    "method": "deterministic-local-session",
+    "serverEstablishesIdentity": true,
+    "clientIdentityFieldsTrusted": false
+  },
+  "roles": {
+    "builderIds": [
+      "actor:the-data-sherpa"
+    ],
+    "operatorIds": [
+      "actor:the-data-sherpa"
+    ],
+    "independentReviewerId": "actor:sherpa111",
+    "blindedReviewerId": "actor:blind-man"
+  },
+  "executionOrder": {
+    "algorithm": "single precommitted practice Run",
+    "seed": "practice-c0-single-run",
+    "rounds": [
+      {
+        "changeId": "change:c0",
+        "lineageIds": [
+          "lineage:practice-c0-claude-minimal"
+        ]
+      }
+    ]
+  },
+  "networkPolicy": {
+    "version": "1.0.0",
+    "allowedEndpoints": [
+      "https://api.anthropic.com",
+      "https://api.github.com",
+      "https://codeload.github.com",
+      "https://github.com",
+      "https://objects.githubusercontent.com",
+      "https://raw.githubusercontent.com",
+      "https://registry.npmjs.org",
+      "https://release-assets.githubusercontent.com"
+    ],
+    "coverageGaps": [
+      "Allowed hostnames can resolve to changing addresses.",
+      "Subscription usage limits are enforced by Anthropic and are not observable as a per-Run monetary amount."
+    ]
+  },
+  "evaluation": {
+    "matrixId": "matrix:c0-v1",
+    "outcomeRulesVersion": "1.0.0",
+    "confidenceInstrumentVersion": "1.0.0",
+    "blindedReviewRubricVersion": "1.0.0"
+  },
+  "publication": {
+    "repository": "https://github.com/the-data-sherpa/change-two",
+    "releaseBaseUrl": "https://github.com/the-data-sherpa/change-two/releases",
+    "redactionPolicyVersion": "1.0.0",
+    "retentionPolicyVersion": "1.0.0",
+    "incidentHoldPolicyVersion": "1.0.0"
+  },
+  "knownLimitations": [
+    "This unmeasured practice Run validates the pipeline and is not a Season Zero outcome.",
+    "One Run cannot support comparative or statistical claims.",
+    "Claude subscription usage exposes no provider-reported per-Run monetary amount."
+  ]
+}
