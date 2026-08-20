@@ -3,7 +3,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSyn
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { materializeCapture, verifyBundle } from "@change-two/evidence";
 import { SanitizerSchemas } from "./schemas.js";
-import { SANITIZATION_SCHEMA_VERSION, SanitizationError, type ApprovalRequest, type FindingCategory, type FindingDisposition, type PublicationApproval, type PublicationEnvelope, type RetentionEvent, type RetentionRecord, type RetentionRequest, type SanitizeRequest, type SanitizationFinding, type SanitizationPolicy, type SanitizationReport, type SanitizationScan, type ScanOptions, type TransformationRecord } from "./types.js";
+import { SANITIZATION_SCHEMA_VERSION, SanitizationError, type AmbiguityResolution, type ApprovalRequest, type FindingCategory, type FindingDisposition, type PublicationApproval, type PublicationEnvelope, type RetentionEvent, type RetentionRecord, type RetentionRequest, type SanitizeRequest, type SanitizationFinding, type SanitizationPolicy, type SanitizationReport, type SanitizationScan, type ScanOptions, type TransformationRecord } from "./types.js";
 
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
 const ENVELOPE_ENTRIES = ["bundle", "publication-approval.json", "retention-record.json", "sanitization-report.json"] as const;
@@ -47,7 +47,9 @@ export function sanitizeBundle(sourceBundleDirectory: string, publicationDirecto
   if (existsSync(publication)) throw new SanitizationError("Publication directory already exists.");
   const snapshot = snapshotFiles(source);
   const scan = scanBundle(source, policy, { generatedAt: request.generatedAt });
-  const unsafe = scan.findings.filter((finding) => finding.disposition !== "redact");
+  const ambiguityResolutions = validateAmbiguityResolutions(scan.findings, request.ambiguityResolutions ?? []);
+  const resolvedFindingIds = new Set(ambiguityResolutions.map((resolution) => resolution.findingId));
+  const unsafe = scan.findings.filter((finding) => finding.disposition === "block" || (finding.disposition === "ambiguous" && !resolvedFindingIds.has(finding.findingId)));
   if (unsafe.length) throw new SanitizationError("Bundle remains quarantined.", unsafe);
   mkdirSync(dirname(publication), { recursive: true });
   const temporary = mkdtempSync(join(dirname(publication), `.sanitizer-${basename(publication)}-`));
@@ -57,7 +59,7 @@ export function sanitizeBundle(sourceBundleDirectory: string, publicationDirecto
     createSanitizedCapture(source, capture);
     materializeCapture(join(capture, "capture.jsonl"), bundle);
     const verified = verifyBundle(bundle);
-    const report: SanitizationReport = { schemaType: "sanitization-report", schemaVersion: SANITIZATION_SCHEMA_VERSION, reportId: request.reportId, generatedAt: request.generatedAt, sourceBundle: scan.sourceBundle, sanitizedBundle: { revisionId: verified.revisionId, contentSetSha256: verified.contentSetSha256 }, policy: scan.policy, status: "passed", findings: scan.findings, transformations: buildTransformations(source, bundle, scan.findings), blockers: [], ambiguities: [] };
+    const report: SanitizationReport = { schemaType: "sanitization-report", schemaVersion: SANITIZATION_SCHEMA_VERSION, reportId: request.reportId, generatedAt: request.generatedAt, sourceBundle: scan.sourceBundle, sanitizedBundle: { revisionId: verified.revisionId, contentSetSha256: verified.contentSetSha256 }, policy: scan.policy, status: "passed", findings: scan.findings, ambiguityResolutions, transformations: buildTransformations(source, bundle, scan.findings), blockers: [], ambiguities: [] };
     const schemas = new SanitizerSchemas(); schemas.validate("report", report, "sanitization report");
     const retention: RetentionRecord = { schemaType: "retention-record", schemaVersion: SANITIZATION_SCHEMA_VERSION, sourceContentSetSha256: scan.sourceBundle.contentSetSha256, publicationApprovedAt: null, destructionDueAt: null, events: [] };
     schemas.validate("retention", retention, "retention record");
@@ -119,6 +121,19 @@ export function assertPublicationReady(publicationDirectory: string, options: { 
   const overdue = parseDate(options.now ?? new Date().toISOString(), "readiness time").getTime() >= parseDate(retention.destructionDueAt, "destructionDueAt").getTime();
   if (overdue && !retention.events.some((event) => event.eventType === "destroyed") && !findActiveHold(retention.events)) throw new SanitizationError("Source evidence is overdue without a hold.");
   return { directory: publication, bundleDirectory, report, approval, retention };
+}
+
+function validateAmbiguityResolutions(findings: readonly SanitizationFinding[], resolutions: readonly AmbiguityResolution[]): readonly AmbiguityResolution[] {
+  const ambiguousFindingIds = new Set(findings.filter((finding) => finding.disposition === "ambiguous").map((finding) => finding.findingId));
+  const seen = new Set<string>();
+  for (const resolution of resolutions) {
+    if (!ambiguousFindingIds.has(resolution.findingId)) throw new SanitizationError(`Ambiguity resolution does not identify a current ambiguous finding: ${resolution.findingId}`);
+    if (seen.has(resolution.findingId)) throw new SanitizationError(`Ambiguity finding was resolved more than once: ${resolution.findingId}`);
+    if (resolution.decision !== "not-sensitive" || resolution.reviewer?.kind !== "human" || !resolution.reviewer.identifier || !resolution.reason) throw new SanitizationError("Each ambiguity resolution requires a human reviewer, a reason, and a not-sensitive decision.");
+    assertDateTime(resolution.reviewedAt, "ambiguity reviewedAt");
+    seen.add(resolution.findingId);
+  }
+  return resolutions;
 }
 
 function scanVerifiedBundle(source: string, policy: SanitizationPolicy): SanitizationFinding[] {

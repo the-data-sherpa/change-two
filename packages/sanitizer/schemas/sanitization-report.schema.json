@@ -4,7 +4,7 @@
   "title": "Sanitization Report",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaType", "schemaVersion", "reportId", "generatedAt", "sourceBundle", "sanitizedBundle", "policy", "status", "findings", "transformations", "blockers", "ambiguities"],
+  "required": ["schemaType", "schemaVersion", "reportId", "generatedAt", "sourceBundle", "sanitizedBundle", "policy", "status", "findings", "ambiguityResolutions", "transformations", "blockers", "ambiguities"],
   "properties": {
     "schemaType": { "const": "sanitization-report" },
     "schemaVersion": { "const": "sanitization/v1" },
@@ -15,6 +15,7 @@
     "policy": { "$ref": "#/$defs/policy" },
     "status": { "const": "passed" },
     "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "ambiguityResolutions": { "type": "array", "items": { "$ref": "#/$defs/ambiguityResolution" } },
     "transformations": { "type": "array", "items": { "$ref": "#/$defs/transformation" } },
     "blockers": { "type": "array", "maxItems": 0 },
     "ambiguities": { "type": "array", "maxItems": 0 }
@@ -37,8 +38,23 @@
       "properties": {
         "findingId": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 }, "rule": { "type": "string", "minLength": 1 },
         "category": { "enum": ["credential", "authentication", "private-path", "unrelated-history", "unreleased-content", "ambiguous"] },
-        "disposition": { "const": "redact" }, "reason": { "type": "string", "minLength": 1 },
+        "disposition": { "enum": ["redact", "ambiguous"] }, "reason": { "type": "string", "minLength": 1 },
         "sourceSha256": { "$ref": "#/$defs/sha256" }, "matchSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "ambiguityResolution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["findingId", "decision", "reviewedAt", "reviewer", "reason"],
+      "properties": {
+        "findingId": { "type": "string", "minLength": 1 },
+        "decision": { "const": "not-sensitive" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "reviewer": {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "identifier"],
+          "properties": { "kind": { "const": "human" }, "identifier": { "type": "string", "minLength": 1 } }
+        },
+        "reason": { "type": "string", "minLength": 1 }
       }
     },
     "transformation": {

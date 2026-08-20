@@ -66,6 +66,27 @@ test("scan quarantines blockers, unreleased content, and ambiguity", () => {
     assert.ok(scan.findings.some((finding) => finding.rule === "unreleased-hidden-check-id"));
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+test("sanitization requires and records a human resolution for every ambiguity", () => {
+  const root = temporary();
+  try {
+    const bundle = createBundle(root, cases.ambiguous);
+    const scan = scanBundle(bundle, policy, { generatedAt: sanitizeRequest.generatedAt });
+    const ambiguity = scan.findings.find((finding) => finding.disposition === "ambiguous");
+    assert.ok(ambiguity);
+    const resolution = {
+      findingId: ambiguity.findingId,
+      decision: "not-sensitive" as const,
+      reviewedAt: "2026-01-02T01:00:00.000Z",
+      reviewer: { kind: "human" as const, identifier: "actor:reviewer" },
+      reason: "Synthetic ambiguity fixture contains no sensitive content.",
+    };
+    assert.throws(() => sanitizeBundle(bundle, join(root, "automation"), policy, { ...sanitizeRequest, ambiguityResolutions: [{ ...resolution, reviewer: { kind: "automation", identifier: "forbidden" } }] } as never), SanitizationError);
+    const report = sanitizeBundle(bundle, join(root, "publication"), policy, { ...sanitizeRequest, ambiguityResolutions: [resolution] });
+    assert.deepEqual(report.ambiguityResolutions, [resolution]);
+    assert.equal(report.ambiguities.length, 0);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 
 test("sanitization redacts deterministically, records checksum links, and never mutates source", () => {
   const root = temporary();

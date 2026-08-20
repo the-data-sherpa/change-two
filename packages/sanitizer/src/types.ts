@@ -57,6 +57,14 @@ export interface TransformationRecord {
   readonly rule: string;
   readonly reason: string;
 }
+export interface AmbiguityResolution {
+  readonly findingId: string;
+  readonly decision: "not-sensitive";
+  readonly reviewedAt: string;
+  readonly reviewer: HumanActor;
+  readonly reason: string;
+}
+
 
 export interface SanitizationReport {
   readonly schemaType: "sanitization-report";
@@ -68,6 +76,7 @@ export interface SanitizationReport {
   readonly policy: PolicyIdentity;
   readonly status: "passed";
   readonly findings: readonly SanitizationFinding[];
+  readonly ambiguityResolutions: readonly AmbiguityResolution[];
   readonly transformations: readonly TransformationRecord[];
   readonly blockers: readonly [];
   readonly ambiguities: readonly [];
@@ -122,6 +131,7 @@ export interface ScanOptions {
 export interface SanitizeRequest {
   readonly reportId: string;
   readonly generatedAt: string;
+  readonly ambiguityResolutions?: readonly AmbiguityResolution[];
 }
 
 export type ApprovalRequest = Omit<PublicationApproval, "schemaType" | "schemaVersion" | "reportId" | "sanitizedContentSetSha256" | "decision">;
