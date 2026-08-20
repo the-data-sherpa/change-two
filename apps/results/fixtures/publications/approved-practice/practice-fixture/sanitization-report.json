@@ -17,6 +17,7 @@
   },
   "status": "passed",
   "findings": [],
+  "ambiguityResolutions": [],
   "transformations": [
     {
       "sourcePath": "submitted.patch",

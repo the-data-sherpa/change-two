@@ -147,9 +147,18 @@ export interface SanitizationTransformation {
   readonly sourcePath: string;
   readonly sourceSha256: string;
 }
+export interface AmbiguityResolution {
+  readonly decision: "not-sensitive";
+  readonly findingId: string;
+  readonly reason: string;
+  readonly reviewedAt: string;
+  readonly reviewer: { readonly identifier: string; readonly kind: "human" };
+}
+
 
 export interface SanitizationReport {
   readonly ambiguities: readonly unknown[];
+  readonly ambiguityResolutions: readonly AmbiguityResolution[];
   readonly blockers: readonly unknown[];
   readonly findings: readonly unknown[];
   readonly generatedAt: string;
@@ -335,7 +344,7 @@ function loadPublication(directory: string, now: Date): Publication {
 function parseReport(value: unknown): SanitizationReport {
   const target = "sanitization-report.json";
   const record = assertRecord(value, target);
-  assertKeys(record, ["ambiguities", "blockers", "findings", "generatedAt", "policy", "reportId", "sanitizedBundle", "schemaType", "schemaVersion", "sourceBundle", "status", "transformations"], [], target);
+  assertKeys(record, ["ambiguities", "ambiguityResolutions", "blockers", "findings", "generatedAt", "policy", "reportId", "sanitizedBundle", "schemaType", "schemaVersion", "sourceBundle", "status", "transformations"], [], target);
   assertLiteral(record.schemaType, "sanitization-report", `${target}/schemaType`);
   assertLiteral(record.schemaVersion, "sanitization/v1", `${target}/schemaVersion`);
   assertLiteral(record.status, "passed", `${target}/status`);
@@ -354,8 +363,25 @@ function parseReport(value: unknown): SanitizationReport {
       sourceSha256: assertSha256(transformation.sourceSha256, `${itemTarget}/sourceSha256`),
     };
   });
+  const ambiguityResolutions = assertArray(record.ambiguityResolutions, `${target}/ambiguityResolutions`).map((item, index) => {
+    const itemTarget = `${target}/ambiguityResolutions/${index}`;
+    const resolution = assertRecord(item, itemTarget);
+    assertKeys(resolution, ["decision", "findingId", "reason", "reviewedAt", "reviewer"], [], itemTarget);
+    assertLiteral(resolution.decision, "not-sensitive", `${itemTarget}/decision`);
+    const reviewer = assertRecord(resolution.reviewer, `${itemTarget}/reviewer`);
+    assertKeys(reviewer, ["identifier", "kind"], [], `${itemTarget}/reviewer`);
+    assertLiteral(reviewer.kind, "human", `${itemTarget}/reviewer/kind`);
+    return {
+      decision: "not-sensitive" as const,
+      findingId: assertString(resolution.findingId, `${itemTarget}/findingId`),
+      reason: assertString(resolution.reason, `${itemTarget}/reason`),
+      reviewedAt: assertDate(resolution.reviewedAt, `${itemTarget}/reviewedAt`),
+      reviewer: { identifier: assertString(reviewer.identifier, `${itemTarget}/reviewer/identifier`), kind: "human" as const },
+    };
+  });
   return {
     ambiguities: assertArray(record.ambiguities, `${target}/ambiguities`),
+    ambiguityResolutions,
     blockers: assertArray(record.blockers, `${target}/blockers`),
     findings: assertArray(record.findings, `${target}/findings`),
     generatedAt: assertDate(record.generatedAt, `${target}/generatedAt`),
